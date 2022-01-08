@@ -46,5 +46,12 @@ NULL
 #' @keywords datasets
 NULL
 
-
-
+#' Datasets
+#' ensOrg_name contains organism name of ensembl
+#'
+#'
+#' @name Datasets
+#' @aliases ensOrg_name
+#' @docType data
+#' @keywords datasets
+NULL

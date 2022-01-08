@@ -1,485 +1,434 @@
-# genekitr: Gene Analysis Toolkit in R
 
-> This tool annotates genes with alias, symbol, full name, function also related papers.
->
-> 目的就是：与基因id相关的操作（如转换、可视化交集等）、分析（如富集分析），都可以加进来（后期考虑加入网页版）
+<!-- README.md is generated from README.Rmd. Please edit Rmd file -->
+
+# genekitr
+
+**genekitr** is an R analysis toolkit based on the gene. It mainly
+contains five features:
+
+-   Search: Gene IDs as input then get gene-related information (exp.
+    location, gene name, gene alias, GC content …) as well as search
+    gene-related PubMed records
+
+-   Transform: Transform gene ID type among “symbol”, “entrezid”,
+    “ensembl” and “uniprot”
+
+-   Analysis: Gene enrichment analysis including ORA (GO and KEGG) and
+    GSEA
+
+-   Visualize: Visualization for enrichment analysis and gene overlaps
+
+-   Export: Gene IDs and analysis results could be exported as various
+    sheets in one Excel file, which could be easily read and shared with
+    others
+
+**Why develop this R package?**
+
+Features：
+
+-   Many gene alias could not be recognized. For example, BCC7(human) is
+    actually TP53; Tp53(mouse) is actually Trp53, Trp53inp2 & Ano9. Many
+    popular gene symbol like PD1/PDL1 has own gene ID PDCD1/CD274, which
+    could be omitted in downstream analysis.
+
+-   Some popular gene ID transforming package only support dozens of
+    model species. But here we support 190 species
+
+-   Some R package sets many arguments as input, but we only use
+    simplest argument. For example, user only need to input gene ID then
+    the function will determine gene type automatically.
+
+-   Keep updating annotating resource with online database (Ensembl &
+    Uniprot). For now, we use the current Ensemble v104.
+
+-   Some package exports result as an object which not frendly for users
+    to export and share with others. We export the analysis results as
+    dataframes which could easily share and plot.
+
+-   Built in plotting functions could produce pre-published figures then
+    users only need to simply modify using AI.
 
 ## Table of Contents
 
 -   [Installation](#installation)
--   [Features](#features)
--   [Plans](#plans)
--   [Debug](#debug)
--   [Let's mining data!](#lets-mining-data)
--   [Let's plot!](#lets-plot)
--   [Export](#export)
+-   [Quick guide](#quick-guide)
+-   [Vignette](#vignette)
+-   [Citation](#citation)
+-   [Welcome to contribute](#welcome-to-contribute)
 
 ## Installation
 
-You can also install devel version of **genekitr** from github with:
+Install CRAN stable version:
+
+``` r
+install.packages("genekitr")
+```
+
+Install GitHub dev version:
 
 ``` r
 # install.packages("remotes")
 remotes::install_github("GangLiLab/genekitr")
+# To build local vignette:
+# remotes::install_github("GangLiLab/genekitr", build_vignettes = TRUE, dependencies = TRUE)
 ```
 
-If you want to build vignette in local, please add two options:
+## Quick guide
+
+To quickly go through the package usage, we will use built-in gene list
+from GEO airway
+
+([GSE52778](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE52778))
+DEG analysis.
+
+### Search
+
+##### Search gene related information
+
+`org` argument could accept fullname or shortname of specific organism.
+For example, we could
+
+use common name: `human/hs/hg/hsa` to describe human.
 
 ``` r
-remotes::install_github("GangLiLab/genekitr", build_vignettes = TRUE, dependencies = TRUE)
-```
-
-
-
-## Features
-
-#### 信息获取 (Search)
-
-- genecards虽然全，但是搜索数量有限制，于是整合了Ensembl 数据库和 `orgdb`中的基因信息 => `genInfo`
-
-  - 与Ensembl数据库保持同步，做了`biomart`的数据接口，可以扩展其中各种数据（序列数据由于太长，不支持该函数直接显示；会有相应的序列函数去获取）
-  - 保证返回结果与输入的id是一一对应的，即使没有结果也会用NA填充（即使输入的symbol是gene alias，也能拿到对应的标准symbol name）
-  - 只有Entrez ID 才是唯一的（因此可能出现：一个entrez对应多个symbol、多个ensemble、多个uniprot，但一般第一个或者数值最小的entrez id才是最常使用的）
-  - 对human、mouse、rat使用最全的uniprotKB数据（比ensemble数据库还新）
-- 整合了相关的文献信息，可以自定义搜索关键词 => `genPubmed` 
-
-#### 数据整理与转换（Tidy & Trans）
-
-- 基因ID转换 => `transId`  
-  - 支持`one-to-one match`  以及 `one-to-many match` 两种模式
-  - `one-to-one` ：【id顺序优先级高于数量】提供id及要转换的类型，给出最合适的等长度的id，方便用户直接新增列（比如masspec数据我们想知道每一个uniprot id对应什么基因，一对一模式直接满足新增列）；我们给到的转换id也不是随意挑选的，而是先看`genInfo`的返回信息中NA最少的，如果NA数量一致，再看entrez id最小的（参考entrez id的编排意义）
-    => 返回字符串
-  - `one-to-many` ：【数量优先级高于顺序】比如想要对基因id进行富集分析，就需要尽可能多的id，需要用到一对多的模式，只要能匹配的我们都要
-    => 返回数据框
-  - 默认不进行`na.omit`，目的是让用户方便知道哪些基因没有match上
-
-#### 数据分析（Analyse）
-
-- 有了基因的id和对应的logFC（需要排序好），就可以做GSEA => `genGSEA`
-- 有了基因id，就能做GO分析 => `genGO ` 
-- 有了基因id，就能做KEGG分析 => `genKEGG`
-  - 自己拿基因去做富集分析结果为数据框，并且新增一列：`FoldEnrich`
-  - 拿网页结果，依然可以调整为特定格式 => `as.enrichdat`
-
-#### 可视化（Visualize）
-
-- 气泡图 => `plotEnrichDot ` 
-- 交集韦恩图 =>`plotVenn` 
-
-#### 导出结果 (Export)
-
-- 每个操作都能得到一个数据框，可以继续探索，也可以作为不同的sheets导出到同一个excel => `expo_sheet`
-
-
-
-## Plans
-
-##### 信息获取 (Search)
-
-- [x] `genInfo` 的`orgdb`数据根据每个物种保存为rda，以便快速加载【总共支持12种bioconductor org】
-
-- [x] `genInfo` 输入name是gene alias：如果有对应的symbol，那么symbol列就写输入的name，其他列用标准symbol对应的列；如果没有对应的alias，那么其他列就是NA
-
-- [x] `genInfo`增加基因位置 【之前通过下载分析GTF，但现在用`biomart`接口更快更方便】
-
-- [ ] `genInfo`支持多个不同版本的基因组 => 可以参考`liftover`  （另外ensembl也有REST API：https://rest.ensembl.org/documentation/info/assembly_map）
-
-- [x] `genInfo`与biomart的融合
-
-  同时也发现**一个很有趣的事情**：标准命名人类的HGNC和小鼠的MGI都是以Ensembl数据库中的alias为准，而genecards用的是ncbi gene数据库的alias，为啥呢？其实看它们的创建国就知道了：GeneCards，是由以色列威兹曼研究院和美国Lifemap 生物科技有限公司；HGNC是EBI和剑桥大学联合；MGI是Jackson Lab，位于美国，但它比较倾向于Ensembl
-
-  不过这两个我都加入了`genInfo`中，分别是`ensembl_alias` 和`ncbi_alias` 
-
-- [ ] 可以增加基因以及对应蛋白的序列 => `genSeq` ?
-
-- [ ] `auto_install`增加镜像选择
-
-- [x] 目前`ensembl`数据库的uniprot id 不全，需要使用uniprot的数据把gene 和 protein id联系起来
-  (例如小鼠的`P41234`这个Uniprot ID，在`ensemble`和`orgdb`中都不全，只有用uniprot数据才可以; 
-  再如`Q6P2L7` 这个ID，有的MasSpes数据中将它转为`Casc4` 基因，但是Uniprot官网是`Golm2` ，这里我们的可以和官网保持一致，并且可以比常规MasSpes数据的基因id更丰富)
-
-##### 数据整理与转换（Tidy & Trans）
-
-- [x] ID转换`transId` 允许错误的id匹配，结果为NA，并且提交的顺序和结果的顺序一致
-- [x] 从`genInfo`的结果中提取转换后的id，更快更准确，并且可以保证output和input顺序一致
-- [x] 加快大型数据的ID转换速度，需要改进`genInfo`  脚本的`75-92`行代码=》重新写了`genInfo` 和`transId`代码，重新思考了两种不同id转换模式的应用场景  
-
-##### 数据分析（Analyse）
-
-- [x] 设置自己的示例数据，like：`data(geneList, package="genekitr")`
-  数据来自`airway` ，使用`DESeq2`进行差异分析
-- [x] 富集分析先将基因id全部转成entrez id，然后再根据需要利用 `transId()`  进行转换，达到`setReadable`的目的
-
-##### 可视化（Visualize）
-
-- [x] 增加genVenn，先做成数据框结果。然后如果多于五组比较，就做成usetplot图
-- [x] 图片的y轴label折叠（比如dotplot的y轴有很多的term，且长度不一，如果出现太长的term，最好可以折叠一下）=> `strwrap()`
-- [x] 设定特定的作图格式，比如dotplot可以支持任何网站的结果，只要满足我们的作图格式`as.enrichdat`
-- [ ] 可视化GSEA结果
-
-##### 导出结果 (Export)
-
-- [ ] ~~图片也能导入excel（后期再看看这个有没有意义）~~
-- [ ] ~~想到一个R包名称：`genepedia` （看看以后会不会使用它）~~
-- [x] 设置了一个文件上传下载的服务器，示例数据可以直接存在其中，而不用占用`data`目录的空间
-- [ ] ~~`expoSheet`的帮助示例添加管道操作，演示多个数据集的导出那个~~
-- [x] `expoSheet` 参数接收list 的数据集和名称，取代之前的管道操作
-
-
-
-## DEBUG
-
-- [x] `genGO`的use_symbol参数不管用 （原因：如果提供的已经是symbol，那么就忽略了这个参数）
-
-- [x] 函数正常使用，但是帮助文档出不来（原因：写完函数忘记`devtools::document()` ，跳过这一步直接刷新包就会导致文档没更新）
-
-- [x] 一个symbol对应多个entrez时，会默认按照数值从小到大排序，然后再进行合并。因为同一个symbol name，数值比较小的entrez更常用
-
-- [x] 更新了`genInfo` 和`transID` ，增加参数`simple = TRUE` ，方便应对一个id同时存在多个match结果的情况（如果`simple = TRUE` 就返回和input id 同样顺序的结果；如果`simple = F` ，就返回所有结果）
-
-- [ ] `biomart`的结果也不全？发现`ENSG00000002079`[这个基因](http://asia.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000002079;r=7:99238829-99311130)在ensembl中对应基因`MYH16` ，但是biomart的结果中`ENSG00000002079 ` 没有对应，而且`MYH16` 对应的ensemble id也是NA
-
-  - 解决方法1：尝试下载ensemble物种所有的mapping数据：
-
-    ```xml
-    # 以human为例，下载ensembl、symbol、uniprot的对应
-    wget -O result.txt 'http://www.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "0" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "hgnc_symbol" /><Attribute name = "uniprotswissprot" /></Dataset></Query>'
-    ```
-
-    
-
-
-
-## Let's mining data!
-
-#### Example gene ID
-
-```R
-mm_id =c('Ticam2
-Arhgap33os
-Insl3
-Myo15
-Gal3st2b
-Bloc1s1') 
-mm_id=str_split(mm_id,"\n")[[1]]
-```
-
-#### Method 1: All things about gene ID
-
-- **AUTO** detect orgnism name (e.g. `human/hs/hg`  is fine)
-  - support 12 organisms (maybe more in the future...)
-- **AUTO** detect duplicate ID, ID alias or **even wrong spelled** ID
-- Make sure the input order is identical with the output rownames
-
-```R
-# in this example, BCC7 is the alias of TP53; SXHFJG is a fake name
-hg_id = c("MCM10",  "CDC20",  "S100A9", "FOXM1",  "KIF23",  "MMP1",   "CDC45",  "BCC7" ,  "SXHFJG", "TP53"  )
-genInfo(hg_id, org = 'human')
-```
-
-![](https://jieandze1314-1255603621.cos.ap-guangzhou.myqcloud.com/blog/2021-07-16-061933.png)
-
-Next, let's test mouse id:
-
-```R
-# here, some mouse id are not standard name, like histone genes (H1-0, H1-1...)
-# but we can still get matched standard symbol name
-# Besides, we add two fakegenes to test the robustness
-mm_id = c("Gtpbp4", "Gtpbp8", "Gtse1" , "Gys1","H1-0", "H1-1" ,"H1-2" ,"H1-3" ,"Fakegene1","H1-4",
-          "H1-5" ,"H1-6","H2ac21","H2ax","H2az2","Fakegene2")
-genInfo(mm_id, org = 'mouse')
-```
-
-![](man/figures/example5.png)
-
-
-
-#### Method 2: Search pubmed 
-
-```R
-test2=genPubmed(mm_id, keywords = 'stem cell', field = 'tiab')
-# Search example: Ticam2 [TIAB] AND stem cell [TIAB] 
-
-# or use much specific keyword
-genPubmed(mm_id, keywords = 'stem cell AND epithelial', field = 'tiab')
-```
-
-![](https://jieandze1314-1255603621.cos.ap-guangzhou.myqcloud.com/blog/2021-06-29-081925.png)
-
-#### Method 3: GSEA
-
-- ~~之前的操作~~
-
-  ```R
-  # 加载示例数据
-  data(geneList, package="DOSE")
-  # 获得msigdb的gene set
-  msigdb <- getMsigdb(org='human', category='C3',subcategory = 'TFT:GTRD')
-  # 直接进行gsea
-  egmt <- genGSEA(genelist = geneList,geneset = msigdb)
-  # 如果是extrez id，可以用下面的函数将id变成symbol
-  egmt2 <- DOSE::setReadable(egmt, OrgDb = org.Hs.eg.db, keyType = 'ENTREZID')
-  ```
-
-- 目前已经将`getMsigdb` 整合进`genGSEA `， 和GO、KEGG一样，提供一个物种名称即可，比如人类可以是`human/hs/hsa/hg`
-  并且和GO、KEGG一样，增加了`use_symbol`参数
-
-```R
-# 加载示例数据
-data(geneList, package="DOSE")
-# 直接进行gsea
-genGSEA(genelist = geneList,org = 'human', category='C3',subcategory = 'TFT:GTRD',use_symbol = F)
-```
-
-![](https://jieandze1314-1255603621.cos.ap-guangzhou.myqcloud.com/blog/2021-07-06-073517.png)
-
-#### Method 4: GO
-
-- 函数需要用到物种的`org.db`，**如果没有相关物种注释包**，函数内部的`auto_install()` 会帮助下载👍
-- `use_symbol = T` will return symbol id, otherwise return input id type
-
-```R
-data(geneList, package="DOSE")
-id = names(geneList)[1:100]
-ego = genGO(id, org = 'human',ont = 'mf',pvalueCutoff = 0.05,qvalueCutoff = 0.1 ,use_symbol = T)
-```
-
-![](https://jieandze1314-1255603621.cos.ap-guangzhou.myqcloud.com/blog/2021-07-02-035433.png)
-
-**不知道物种名称？别怕！**
-
-```R
-biocOrg_name()
-# full_name short_name
-# 1   anopheles         ag
-# 2      bovine         bt
-# 3        worm         ce
-# 4      canine         cf
-# 5         fly         dm
-# 6   zebrafish         dr
-# 7    ecolik12      eck12
-# 8  ecolisakai    ecSakai
-# 9     chicken         gg
-# 10      human         hs
-# 11      mouse         mm
-# 12     rhesus        mmu
-# 13      chipm         pt
-# 14        rat         rn
-# 15        pig         ss
-# 16    xenopus         xl
-```
-
-
-
-#### Method 5: Transform gene id
-
-> Get 1-vs-1 matched id, even input gene is alias, duplicated or even WRONG!
-> User just need to get the output (character) to do other analysis (exp. enrichment analysis)
-
-- `org` support many species from `biocOrg_name()` 
-  - support common name (e.g. `human/hs/hg`, `mouse/mm`, `dm/fly`) ...
-- **AUTO detect** input gene id type
-- Gene **ORDER** of output and input is **IDENTICAL**!
-
-```R
-library(AnnoGenes)
-data(geneList, package = 'DOSE')
-id = names(geneList)[1:5]
-id
-# "4312"  "8318"  "10874" "55143" "55388"
-
-## ANY organism alias name and ANY trans_to argument name (exp. "ens", "ensem", "ensembl" are ok to function)
-transId(id, trans_to = 'symbol',org='hs')
-transId(id, trans_to = 'uni',org='human')
-transId(id, trans_to = 'ens',org='hg')
-```
-
-![](https://jieandze1314-1255603621.cos.ap-guangzhou.myqcloud.com/blog/2021-07-20-025105.png)
-
-
-
-If there are some ID could not transform to another type (like "type ERROR ID", "entrez ID has NO matched id"), the output will show as NA, while **still keep the same order** with the input
-
-```R
-# the id "23215326", "344263475" and "45" are fake, while others are real
-fake_id = c(names(geneList)[1:5], '23215326','1','2','344263475','45')
-
-# the gene order of output and input is identical!
-transId(fake_id, trans_to = 'sym',org='human')
-# 70% genes are mapped from entrezid to symbol
-# [1] "MMP1"  "CDC45" "NMU"   "CDCA8" "MCM10" NA      "A1BG"  "A2M"   NA      NA 
-```
-
-However, if user provides **wrong orgnism,** the function will report error...
-
-```R
-## try to trans human id to symbol, but choose wrong org (mouse)
-transId(id, trans_to = 'sym',org='mouse')
-# Error in .gentype(id, org) : Wrong organism! 
-```
-
-Compare `genekitr::transId` and `clusterProfiler::bitr`
-
-> 保留原始id顺序，而没有去除NA，就是为了方便用户看到哪些ID没有转换成功；
-> 如果用户后面需要去掉NA，那么直接使用`na.omit()`即可
-
-```R
-fake_id = c(names(geneList)[1:5], '23215326','1','2','344263475','45')
-res1 = transId(fake_id, trans_to = 'sym',org='human')
-res2 = clusterProfiler::bitr(fake_id, fromType = 'ENTREZID',
-                      toType = 'SYMBOL', OrgDb = org.Hs.eg.db)
-```
-
-![](https://jieandze1314-1255603621.cos.ap-guangzhou.myqcloud.com/blog/2021-07-20-030618.png)
-
-Change another organism:
-
-```R
-library(org.Dm.eg.db)
-id = toTable(org.Dm.egSYMBOL) %>% dplyr::pull(1) %>% sample(20)
-transId(id, trans_to = 'ens',org='fly')
-transId(id, trans_to = 'symbol',org='fly')
-```
-
-![](https://jieandze1314-1255603621.cos.ap-guangzhou.myqcloud.com/blog/2021-07-20-031038.png)
-
-不管是参数的简洁，还是结果的准确性，都胜过其他两大R包`clusterProfiler::bitr` 和`biomaRt::getBM`：
-
-![](man/figures/exp8.png)
-
-#### Method 6: KEGG
-
-```R
-ids = names(geneList)[1:100]
-gkeg <- genKEGG(ids, org = 'human') 
-# org可以是common name（如human、mouse），也可以是hg、hs等常见的称呼
-
-# 默认支持readable 参数，结果以symbol name展示
-keg_raw <- genKEGG(test, org = 'hs', use_symbol = F)
-keg_readable <- genKEGG(test, org = 'hs', use_symbol = T)
-# 差别就是：
-```
-
-![](man/figures/example7.png)
-
-
-
-换个物种试试~理论上，**拿任意物种的symbol、entrez、ensembl基因，给函数投食即可**。不需要再提前进行id转换了
-
-```R
-# 小鼠基因为例
-head(id)
-[1] "Adora1"    "Insl3"    "AF067061"      "Alpk1"         "Arhgap20"      "B020004J07Rik" "Bmp6"
-keg <- genKEGG(mm_id, org = 'mouse', use_symbol = T, pvalueCutoff = 1, qvalueCutoff = 1, maxGSSize = 3000)
-```
-
-
-
-## Let's plot!
-
-#### P1: Enrichment dotplot =>  `plotEnrichDot ` 
-
-- 默认按照 `FoldEnrich + p.adjust`
-- 目前可以将大多数富集分析结果转换为作图需要的数据框：`as.enrichdat` 
-  - 支持R包：clusterP
-  - 支持网页：[panther](http://geneontology.org/)、
-- 支持定义主图和legend的字体及大小；是否去除网格线、文字、图例；自定义渐变色的顶部和底部颜色；设定x轴起点；折叠y轴title；边框和刻度线宽度
-
-```R
-# First, feed any dataframe result to enrichDat 
-test = as.enrichDat(test)
-ego = as.enrichDat(ego)
-
-# Second, easy plot
-p1 = plotEnrichDot(test,legend_by = 'qvalue'))
-p2 = plotEnrichDot(ego)
-
-# Third, if you want to change more on plot...
-# test dataframe was from GeneOntology panther web result
-p3 = plotEnrichDot(test, xlab_type =  'FoldEnrich', legend_by = 'qvalue',
-              show_item = 15, main_text_size = 14,legend_text_size = 10,
-              low_color = 'red', high_color = 'blue',
-              xleft = 0, font_type = 'Arial', remove_grid = T,
-              wrap_width = 30,border_thick = 3 )
-
-# ego dataframe was from clusterP result
-p4=plotEnrichDot(ego, xlab_type =  'GeneRatio', legend_by = 'p.adjust',
-                 show_item = 10, main_text_size = 14,legend_text_size = 10,
-                 low_color = 'orange', high_color = 'green',
-                 xleft = 0, font_type = 'Times New Roman', remove_grid = F,
-                 wrap_width = NULL ,border_thick = 1)
-
-library(patchwork)
-wrap_plots(list(p1,p2,p3,p4))+ plot_layout(ncol = 2) + 
-  plot_annotation(tag_levels = 'a')
-```
-
-![](man/figures/example3.png)
-
-
-
-#### P2: Venn plot =>  `plotVenn ` 
-
-- 如果venn_list的长度大于4，那就默认使用`UpSet plot`；否则使用常规的venn plot
-- venn plot可以调整：透明度、字体大小、边框粗细/有无、颜色
-- upset plot可以调整：字体大小、边框粗细、内部网格线
-
-```R
-library(AnnoGenes)
+library(genekitr)
+#> 
 library(dplyr)
-library(patchwork)
-
-set1 <- paste(rep("gene" , 100) , sample(c(1:1000) , 100 , replace=F) , sep="")
-set2 <- paste(rep("gene" , 100) , sample(c(1:1000) , 100 , replace=F) , sep="")
-set3 <- paste(rep("gene" , 100) , sample(c(1:1000) , 100 , replace=F) , sep="")
-set4 <- paste(rep("gene" , 100) , sample(c(1:1000) , 100 , replace=F) , sep="")
-set5 <- paste(rep("gene" , 100) , sample(c(1:1000) , 100 , replace=F) , sep="")
-
-two_gene_list = list(gset1 = set1, gset2 = set2)
-sm_gene_list = list(gset1 = set1, gset2 = set2, gset3 = set3)
-la_gene_list = list(gset1 = set1, gset2 = set2, gset3 = set3, gset4 = set4, gset5 = set5 )
-
-p1 = plotVenn(two_gene_list, alpha_degree = 1, border_thick = 0)
-
-p2= plotVenn(sm_gene_list,alpha_degree = .3, border_thick = 1)
-p3 = plotVenn(sm_gene_list,text_size = 2,alpha_degree = 1,
-              remove_grid = T, color = ggsci::pal_lancet()(3))
-
-p4 = plotVenn(la_gene_list,use_venn = F,
-              text_size = 10, border_thick = 2,remove_grid = T)
-
-(p1+p2+p3)/p4
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
+data(geneList)
+id = names(geneList)[1:100]
+head(id)
+#> [1] "2847"   "148145" "1591"   "2903"   "26045"  "10268"
+ginfo = genInfo(id, org = 'human')
+dplyr::as_tibble(head(ginfo))
+#> # A tibble: 6 × 21
+#>   input_id symbol    ensembl  uniprot   chr   start end   width strand gene_name
+#>   <ord>    <chr>     <chr>    <chr>     <chr> <chr> <chr> <chr> <chr>  <chr>    
+#> 1 2847     MCHR1     ENSG000… Q99705; … 22    4067… 4068… 4065  1      melanin …
+#> 2 148145   LINC00906 ENSG000… <NA>      19    2888… 2897… 87445 1      long int…
+#> 3 1591     CYP24A1   ENSG000… Q07973    20    5415… 5417… 20541 -1     cytochro…
+#> 4 2903     GRIN2A    ENSG000… Q12879; … 16    9753… 1018… 4295… -1     glutamat…
+#> 5 26045    LRRTM2    ENSG000… O43300; … 5     1388… 1388… 6448  -1     leucine …
+#> 6 10268    RAMP3     ENSG000… O60896; … 7     4515… 4518… 28512 1      receptor…
+#> # … with 11 more variables: ncbi_alias <chr>, ensembl_alias <chr>,
+#> #   gc_content <chr>, gene_biotype <chr>, transcript_count <chr>,
+#> #   hgnc_id <chr>, omim <chr>, ccds <chr>, reactome <chr>, ucsc <chr>,
+#> #   mirbase_id <chr>
 ```
 
-![](man/figures/example4.png)
+##### Get specific type genes
 
+For example, we want to retrieve all human protein-coding ids. Just
+leave argument `id` empty.
 
-
-
-
-## Export
-
-- support list of datasets with different sheet names
-
-```R
-library(openxlsx)
-expoSheet(dat_list =  list(mtcars,ToothGrowth,iris), name_list = list('mtcars','tooth','IRIS'),
-  filename = 'test.xlsx')
+``` r
+pro_hg = genInfo(org = 'human') %>% 
+  dplyr::filter(gene_biotype  == 'protein_coding') %>% dplyr::pull(symbol)
+head(pro_hg) 
+#> [1] "A1BG"    "NAT2"    "ADA"     "CDH2"    "AKT3"    "GAGE12F"
+# number of human protein id
+length(pro_hg)
+#> [1] 19398
 ```
 
-<img src='man/figures/example1.png' align="below" />
+##### Search gene PubMed records
 
+``` r
+pub = genPubmed(
+  id = c("Cyp2c23", "Fhit", "Gal3st2b","Insl3", "Gbp4"),
+  keywords = "stem cell", field = "tiab")
+#> Search example: Cyp2c23 [TIAB] AND stem cell [TIAB]
+dplyr::as_tibble(head(pub))
+#> # A tibble: 6 × 6
+#>   gene    title                      date    doi            pmid  journal       
+#>   <chr>   <chr>                      <chr>   <chr>          <chr> <chr>         
+#> 1 Cyp2c23 NA                         NA      "NA"           NA    NA            
+#> 2 Fhit    Changes in Methylation Pa… 2021_0… "10.1155/2021… 3455… Stem cells in…
+#> 3 Fhit    Methylation status of the… 2020_1… "10.3892/ol.2… 2613… Oncology lett…
+#> 4 Fhit    Totipotent stem cells bea… 2009_0… "10.1111/j.13… 1901… British journ…
+#> 5 Fhit    Fhit-deficient hematopoie… 2008_0… "10.1158/0008… 1848… Cancer resear…
+#> 6 Fhit    Induction by 7,12-dimethy… 2006_1… ""             1686… International…
+```
 
+### Transform
 
+Regardless of input ID type, function will detect automatically.
 
+User only need to specify which type you want, the left things just give
+`transId`.
 
+##### Transform ID from entrezid to symbol
 
+``` r
+id[1:5]
+#> [1] "2847"   "148145" "1591"   "2903"   "26045"
+transId(id[1:5], trans_to = 'symbol',org='hs')
+#> 
+#> 100% genes are mapped from entrezid to symbol
+#> [1] "MCHR1"     "LINC00906" "CYP24A1"   "GRIN2A"    "LRRTM2"
+```
 
-## References
+##### Transform gene alias
 
-### Things about GSEA
+``` r
+transId(c('BCC7','PDL1','PD1'), trans_to = 'symbol',org='human')
+#> 
+#> 100% genes are mapped from symbol to symbol
+#> [1] "TP53"  "CD274" "PDCD1"
 
-- https://www.biostars.org/p/132575/
-- https://www.biostars.org/p/367191/
-- https://www.gsea-msigdb.org/gsea/doc/GSEAUserGuideFrame.html
+# We could get all matched id when one-to-many occurs
+transId(c('BCC7','PDL1','PD1'), trans_to = 'symbol',org='hg',unique = F)
+#> Some ID occurs one-to-many match, like "PD1"
+#> If you want to get one-to-one match, please set "unique=TRUE"
+#> 
+#> 100% genes are mapped from symbol to symbol
+#>   input_id symbol
+#> 1     BCC7   TP53
+#> 2     PDL1  CD274
+#> 3      PD1  PDCD1
+#> 4      PD1   SNCA
+#> 5      PD1 SPATA2
+```
 
+##### Transform protein id to gene id
+
+``` r
+# to symbol
+transId(c('Q12879','Q86V25','Q8N386','Q5T7N3'),'sym','hs')
+#> 
+#> 100% genes are mapped from uniprot to symbol
+#> [1] "GRIN2A" "VASH2"  "LRRC25" "KANK4"
+# to ensembl
+transId(c('Q12879','Q86V25','Q8N386','Q5T7N3'),'ens','hs')
+#> 
+#> 100% genes are mapped from uniprot to ensembl
+#> [1] "ENSG00000183454" "ENSG00000143494" "ENSG00000175489" "ENSG00000132854"
+```
+
+##### Transform ensembl id to symbol
+
+``` r
+transId(c('ENSG00000146006','ENSG00000134321','ENSG00000136267','ENSG00000105989'),'sym','hg')
+#> 
+#> 100% genes are mapped from ensembl to symbol
+#> [1] "LRRTM2" "RSAD2"  "DGKB"   "WNT2"
+```
+
+##### Transform ensembl id to protein id
+
+``` r
+transId(c('ENSG00000146006','ENSG00000134321','ENSG00000136267','ENSG00000105989'),'uniprot','hg')
+#> 
+#> 100% genes are mapped from ensembl to uniprot
+#> [1] "O43300; E5RIQ2; E5RHE5"                            
+#> [2] "Q8WXG1; C9J674; A0A7P0TA11; A0A7P0Z4E2; A0A7P0T918"
+#> [3] "Q9Y6T7; B7ZL83; B5MCD5; B5MBY2; C9JA18"            
+#> [4] "P09544; A0A3B3ITC9; C9JUI2; F8WDR1; L8EA39"
+```
+
+### Analysis
+
+All enrichment analysis \*\* just give a gene list \*\* (especially GSEA
+need the gene list with a decreasing fold change)
+
+#### over representation analysis (ORA)
+
+##### GO analysis
+
+User could choose ontology among “bp”, “cc”, “mf” or “all”.
+
+If set `use_symbol = TRUE`, the result will return gene symbol for easy
+understanding.
+
+If you are not sure the organism name, please type `biocOrg_name` and
+choose full name or short name
+
+``` r
+ego_bp = genGO(id[1:100], org = 'human', ont = 'bp',pvalueCutoff = 0.05,qvalueCutoff = 0.05, use_symbol = T)
+
+# user could choose all three ontology
+ego_all = genGO(id[1:100], org = 'human', ont = 'all',pvalueCutoff = 0.05,qvalueCutoff = 0.05, use_symbol = T)
+```
+
+##### KEGG analysis
+
+If you are not sure the organism name, please type `keggOrg_name` and
+choose full name or short name
+
+``` r
+ekeg = genKEGG(id, org = 'hg',use_symbol = T)
+
+# If we want to compare different groups of genes, we only need to add a gene group list
+group = list(groupA = c(rep("up",50),rep("down",50)),
+             groupB = c(rep("A",30), rep("B",70)))
+ekeg_compare =  genKEGG(c(head(id,50),tail(id,50)), group_list = group,
+                    org = 'human',pvalueCutoff = 0.15,qvalueCutoff = 0.15, use_symbol = T)
+```
+
+#### gene set enrichment analysis (GSEA) analysis
+
+`category` argument could choose from ‘C1’,‘C2’,‘C3’,
+‘C4’,‘C5’,‘C6’,‘C7’,‘C8’ and ‘H’
+
+If you are not sure `subcategory`, you can only choose `category` and
+leave `subcategory` as blank.
+
+The message will tell what options you could choose in the main
+`category`.
+
+``` r
+egsea = genGSEA(genelist = geneList,org = 'hs', 
+                category = "H",
+                use_symbol = T, pvalueCutoff = 1)
+#> H has no subcategory, continue...
+```
+
+### Visulaize
+
+##### Gene overlap
+
+If we only have two or three groups of genes, the function will plot
+Venn diagram;
+
+If we have at least four groups of genes, the default option will be
+UpSet diagram.
+
+``` r
+# if only have three groups
+set1 <- paste0(rep("gene", 100), sample(c(1:1000), 100))
+set2 <- paste0(rep("gene", 100), sample(c(1:1000), 100))
+set3 <- paste0(rep("gene", 100), sample(c(1:1000), 100))
+sm_gene_list <- list(gset1 = set1, gset2 = set2, gset3 = set3)
+plotVenn(sm_gene_list,
+  text_size = 1.5, alpha_degree = 1,
+  remove_grid = TRUE)
+#> Color length should be same with venn_list, auto assign colors...
+```
+
+![](man/figures/venn-1.png)<!-- -->
+
+``` r
+# if only have five groups
+set4 <- paste0(rep("gene", 100), sample(c(1:1000), 100))
+set5 <- paste0(rep("gene", 100), sample(c(1:1000), 100))
+la_gene_list <- list(gset1 = set1, gset2 = set2, gset3 = set3,
+  gset4 = set4, gset5 = set5)
+plotVenn(la_gene_list,
+  text_size = 15, alpha_degree = 0.2, border_thick = 2,
+  remove_grid = TRUE, use_venn = FALSE)
+```
+
+![](man/figures/venn-2.png)<!-- -->
+
+##### Enrichment plot
+
+-   Support barplot, dotplot
+
+-   x-axis support: GeneRatio/Count/FoldEnrich
+
+-   stats support: pvalue/p.adjust/qvalue(FDR)
+
+-   easily modify plot line & text pattern
+
+``` r
+plotEnrich(ego_bp,plot_type = 'bar',remove_grid = T, main_text_size = 8,
+  legend_text_size = 6,border_thick = 1.5)
+```
+
+![](man/figures/enrich_bar1-1.png)<!-- -->
+
+``` r
+plotEnrich(ego_all,plot_type = 'bar', xlab_type = 'GeneRatio',legend_type = 'qvalue',
+           remove_grid = T, main_text_size = 8, legend_text_size = 6,border_thick = 1.5)
+```
+
+![](man/figures/enrich_bar2-1.png)<!-- -->
+
+##### Enrichment dotplot
+
+``` r
+plotEnrich(ego_bp,plot_type = 'dot',xlab_type = 'GeneRatio',legend_type = 'qvalue',
+          remove_grid = T, main_text_size = 8, legend_text_size = 6)
+```
+
+![](man/figures/enrich_dot-1.png)<!-- -->
+
+``` r
+plotEnrich(ekeg_compare)
+```
+
+![](man/figures/enrich_dot2-1.png)<!-- -->
+
+##### gsea plot
+
+-   support: volcano/classic/multi-pathway(fgsea)
+
+``` r
+plotGSEA(egsea,plot_type = 'volcano', show_pathway = 3)
+```
+
+![](man/figures/gsea-1.png)<!-- -->
+
+``` r
+plotGSEA(egsea, plot_type = 'classic', show_pathway = c("HALLMARK_UV_RESPONSE_DN","HALLMARK_INTERFERON_ALPHA_RESPONSE"),
+         show_genes = c("SELL"))
+```
+
+![](man/figures/gsea-2.png)<!-- -->
+
+``` r
+# default shows top3 up & down pathways
+plotGSEA(egsea, plot_type = 'fgsea')
+```
+
+![](man/figures/gsea-3.png)<!-- -->
+
+### Export
+
+If you want to export many data sets in one file, you could use
+`expoSheet`
+
+For example, since we got 100 genes’ GO and KEGG result, then we want to
+export them with gene information:
+
+``` r
+expoSheet(
+  dat_list = list(ginfo, ego_bp, ego_all,ekeg), name_list = list("GeneInfo","GO-BP", "GO-All","KEGG"),
+  filename = "gene_enrich.xlsx", dir = tempdir())
+```
+
+The result will be:
+
+<img src='man/figures/exp0.png' height="500" alt="exp0"/>
+
+## Vignette
+
+### English
+
+-   Wait to update…
+
+### Chinese
+
+-   wait to update…
+
+## Citation
+
+Wait for paper …
+
+## Welcome to contribute
+
+If you are interested in this tool, welcome contribute your ideas as
+follows:
+
+-   Git clone this project
+-   Double click `genekitr.Rproj` to open RStudio
+-   Modify source code in `R/` folder
+-   Run `devtools::check()` to make sure no errors, warnings or notes
+-   Pull request and describe clearly your changes

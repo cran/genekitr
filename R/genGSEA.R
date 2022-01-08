@@ -7,6 +7,7 @@
 #'   'C4','C5','C6','C7','C8','H'.
 #' @param subcategory MSigDB sub-collection abbreviation, choose from
 #'   `msig_category`.
+#' @param use_symbol Logical to set result gene id as gene symbol, default is TRUE.
 #' @param minGSSize Minimal size of each geneSet for analyzing, default is 10.
 #' @param maxGSSize Maximal size of each geneSet for analyzing, default is 500.
 #' @param pvalueCutoff Adjusted pvalue cutoff, default is 0.05.
@@ -14,28 +15,32 @@
 #' @importFrom dplyr select filter pull mutate %>%
 #' @importFrom stringr str_split
 #' @importFrom clusterProfiler GSEA
+#' @importFrom stats na.omit
+#' @importFrom rlang .data
 #'
-#' @return A `data.frame`.
+#' @return GSEA list
 #' @export
 #'
 #' @examples
 #' \donttest{
-#' data(geneList, package="genekitr")
-#' gse = genGSEA(genelist = geneList,org = 'human', category='H')
+#' data(geneList, package = "genekitr")
+#' gse <- genGSEA(genelist = geneList, org = "human",
+#'   category = "H",use_symbol = TRUE)
 #' }
-
-
+#'
 genGSEA <- function(genelist,
                     org,
-                    category = c('C1','C2','C3','C4','C5','C6','C7','C8','H'),
+                    category = c("C1", "C2", "C3", "C4",
+                                 "C5", "C6", "C7", "C8", "H"),
                     subcategory = NULL,
+                    use_symbol = TRUE,
                     minGSSize = 10,
                     maxGSSize = 500,
                     pvalueCutoff = 0.05,
-                    ...){
+                    ...) {
 
   #--- args ---#
-  category = match.arg(category)
+  category <- match.arg(category)
 
   stopifnot(
     is.numeric(minGSSize),
@@ -50,35 +55,106 @@ genGSEA <- function(genelist,
 
   # use entrez id or symbol
   if (any(names(genelist) %in% geneset$gene_symbol)) {
-    geneset = geneset %>%
-      dplyr::select(gs_name,gene_symbol)
-  }else if (any(names(genelist) %in% geneset$entrez_gene)) {
-    geneset = geneset %>%
-      dplyr::select(gs_name,entrez_gene)
-  }else{
-    names(genelist) =transId(names(genelist),trans_to = 'entrez',org)
-    geneset = geneset %>%
-      dplyr::select(gs_name,entrez_gene)
+    geneset <- geneset %>%
+      dplyr::select(gs_name, gene_symbol)
+  } else if (any(names(genelist) %in% geneset$entrez_gene)) {
+    geneset <- geneset %>%
+      dplyr::select(gs_name, entrez_gene)
+  } else {
+    names(genelist) <- transId(names(genelist), trans_to = "entrez", org)
+    geneset <- geneset %>%
+      dplyr::select(gs_name, entrez_gene)
   }
 
-  egmt <- suppressWarnings(clusterProfiler::GSEA(genelist, TERM2GENE=geneset,
-                                                 pvalueCutoff, verbose=F,
-                                                 ...))
+  egmt <- suppressWarnings(clusterProfiler::GSEA(genelist,
+    TERM2GENE = geneset,
+    pvalueCutoff = pvalueCutoff,
+    verbose = F,
+    ...
+  ))
 
-  # if( use_symbol){
-  #   info = genInfo(names(genelist),org,unique = T) %>% na.omit()
-  #   new_geneID = stringr::str_split(egmt$geneID,'\\/') %>%
-  #     lapply(., function(x) {
-  #       info %>% dplyr::filter(input_id %in% x) %>% dplyr::pull(symbol)
-  #     }) %>% sapply(., paste0, collapse = "/")
-  #   new_egmt =  egmt %>% as.data.frame() %>%
-  #     dplyr::mutate(core_enrichment = new_geneID)
-  #
-  # }else{
-  #   new_egmt = egmt %>% as.data.frame()
-  # }
-  #
-  new_egmt = egmt %>% as.data.frame()
-  return(new_egmt)
+  exponent <-  egmt@params[["exponent"]]
 
+  egmt =  egmt %>% as.data.frame() %>% as.enrichdat()
+  if( use_symbol){
+    info = genInfo(unique(unlist(stringr::str_split(egmt$geneID,'\\/'))),org,unique = T)
+    new_geneID = stringr::str_split(egmt$geneID,'\\/') %>%
+      lapply(., function(x) {
+        info %>% dplyr::filter(input_id %in% x) %>% dplyr::pull(symbol)
+      }) %>% sapply(., paste0, collapse = "/")
+    egmt =  egmt %>%
+      dplyr::mutate(geneID = new_geneID)
+  }
+
+  res <- list(genelist = genelist, geneset = geneset, gsea_df = egmt, exponent = exponent, org = org)
+
+  return(res)
 }
+
+getMsigdb <- function(org,
+                      category = c("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "H"),
+                      subcategory = NULL) {
+
+  #--- args ---#
+  if (!requireNamespace("msigdbr", quietly = TRUE)) utils::install.packages("msigdbr")
+  org <- tolower(org)
+  if (org == "hg" | org == "hsa" | org == "hs" | org == "homo sapiens") org <- "human"
+  if (org == "mm" | org == "mmu") org <- "mouse"
+
+  # org
+  msigOrg <- msigdb_org_data()
+  rm(msig_org, envir = .GlobalEnv)
+  all_org <- c(
+    msigOrg[, 1],
+    stringr::str_split(msigOrg[, 2], ", ", simplify = T) %>%
+      as.character() %>%
+      stringi::stri_remove_empty_na()
+  )
+  if (!org %in% tolower(all_org)) stop("Choose a valid organism!\n\n", paste0(all_org, " | "))
+
+  # category
+  if (!category %in% c("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "H")) {
+    stop("Category should choose from: C1, C2, C3, C4, C5, C6, C7, C8, H...")
+  } else {
+    category <- match.arg(category)
+  }
+
+  # subcategory
+  msigCategory <- msigdb_category_data()
+  rm(msig_category, envir = .GlobalEnv)
+  all_sub <- msigCategory[, 2] %>%
+    stringi::stri_remove_empty_na()
+
+  som_sub <- msigCategory %>%
+    dplyr::filter(gs_cat == category) %>%
+    dplyr::pull(gs_subcat)
+
+  if (is.null(subcategory)) {
+    if (som_sub == "") {
+      message(paste0(category, " has no subcategory, continue..."))
+      subcategory <- ""
+    } else {
+      stop("choose a valid subcategory for ", category, "...\n", paste0(som_sub, " | "))
+    }
+  } else if (!subcategory %in% som_sub) {
+    stop("choose a valid subcategory for ", category, "...\n", paste0(som_sub, " | "))
+  }
+
+
+  #--- codes ---#
+  msigdb <- msigdbr::msigdbr(org, category, subcategory) %>%
+    dplyr::select(., c("gs_name", "gene_symbol", "entrez_gene")) %>%
+    as.data.frame()
+
+  return(msigdb)
+}
+
+
+
+utils::globalVariables(c("gs_name","gene_symbol","entrez_gene","input_id","symbol",
+                         "msig_org","msig_category","gs_cat","gs_subcat"))
+
+
+
+
+

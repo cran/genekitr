@@ -12,9 +12,9 @@ transId(id, trans_to, org, unique = TRUE)
 \item{trans_to}{Transform to which type, one of "symbol", "entrezid",
 "ensembl" and "uniprot."}
 
-\item{org}{Organism name from `biocOrg_name`, both full name and short name are fine.}
+\item{org}{Short latin name from `ensOrg_name_data`.}
 
-\item{unique}{Logical to keep only one unique mapped ID, default is FALSE.}
+\item{unique}{If keep only one unique mapped ID when one-to-many gene occurs, default is FALSE.}
 }
 \value{
 A character of transformed ids.
@@ -23,13 +23,16 @@ A character of transformed ids.
 Transform gene id among symbol, entrezid,  ensembl and uniprot
 }
 \examples{
-\donttest{
+\dontrun{
 transId(
   id = c("Cyp2c23", "Fhit", "Gal3st2b", "Trp53", "Tp53"),
-  trans_to = "ensembl", org = "mouse", unique = TRUE)
+  trans_to = "ensembl", org = "mouse", unique = TRUE
+)
 # input id contains fake id and one-to-many match id
 transId(
   id = c("MMD2", "HBD", "RNR1", "TEC", "BCC7", "FAKEID", "TP53"),
-  trans_to = "entrez", org = "hg", unique = FALSE)
+  trans_to = "entrez", org = "hg", unique = FALSE
+)
 }
+
 }

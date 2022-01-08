@@ -4,12 +4,12 @@
 \alias{genInfo}
 \title{Get gene related information}
 \usage{
-genInfo(id, org, unique = FALSE)
+genInfo(id = NULL, org, unique = FALSE)
 }
 \arguments{
-\item{id}{Gene id (symbol, ensembl or entrez id) or uniprot id.}
+\item{id}{Gene id (symbol, ensembl or entrez id) or uniprot id. If this argument is NULL, return all gene info.}
 
-\item{org}{Species name from `biocOrg_name`, both full name and short name are fine.}
+\item{org}{Short latin name from `ensOrg_name_data`.}
 
 \item{unique}{Logical to keep only one matched ID, default is FALSE.}
 }
@@ -27,5 +27,6 @@ x <- genInfo(id = c(
   "FAKEID", "TP53", "HBD", "NUDT10"
 ), org = "hg", unique = TRUE)
 head(x)
+
 }
 }

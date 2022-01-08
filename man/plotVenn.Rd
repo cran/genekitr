@@ -6,19 +6,20 @@
 \usage{
 plotVenn(
   venn_list,
+  use_venn = TRUE,
   color = NULL,
   alpha_degree = 0.3,
   text_size = 1,
+  border_thick = 1,
   remove_grid = FALSE,
-  use_venn = TRUE,
-  main_text_size = 10,
-  legend_text_size = 8,
-  font_type = "Arial",
-  border_thick = 1
+  ...
 )
 }
 \arguments{
 \item{venn_list}{A list of gene id.}
+
+\item{use_venn}{Logical, use venn to plot, default is `TRUE`, the other
+option is upsetplot for large list.}
 
 \item{color}{Colors for gene lists, default is NULL.}
 
@@ -26,18 +27,11 @@ plotVenn(
 
 \item{text_size}{Text size, default is 1.}
 
+\item{border_thick}{Numeric, border thickness, default is 1.}
+
 \item{remove_grid}{Logical, remove circle or grid lines, default is `FALSE`.}
 
-\item{use_venn}{Logical, use venn to plot, default is `TRUE`, the other
-option is upsetplot for large list.}
-
-\item{main_text_size}{Numeric, main text size}
-
-\item{legend_text_size}{Numeric, legend text size}
-
-\item{font_type}{Font family}
-
-\item{border_thick}{Numeric, border thickness}
+\item{...}{other arguments transfer to `plot_theme` function}
 }
 \value{
 A ggplot object
@@ -52,12 +46,17 @@ set2 <- paste0(rep("gene", 100), sample(c(1:1000), 100))
 set3 <- paste0(rep("gene", 100), sample(c(1:1000), 100))
 set4 <- paste0(rep("gene", 100), sample(c(1:1000), 100))
 set5 <- paste0(rep("gene", 100), sample(c(1:1000), 100))
-sm_gene_list = list(gset1 = set1, gset2 = set2, gset3 = set3)
-la_gene_list = list(gset1 = set1, gset2 = set2, gset3 = set3,
-  gset4 = set4, gset5 = set5 )
-plotVenn(sm_gene_list,text_size = 1.5,alpha_degree = 1,
-  remove_grid = TRUE,color = ggsci::pal_lancet()(3))
-plotVenn(la_gene_list,text_size = 15,alpha_degree = 0.2,border_thick = 2,
-remove_grid = TRUE, use_venn = FALSE)
-
+sm_gene_list <- list(gset1 = set1, gset2 = set2, gset3 = set3)
+la_gene_list <- list(
+  gset1 = set1, gset2 = set2, gset3 = set3,
+  gset4 = set4, gset5 = set5
+)
+plotVenn(sm_gene_list,
+  text_size = 1.5, alpha_degree = 1,
+  remove_grid = TRUE, color = ggsci::pal_lancet()(3)
+)
+plotVenn(la_gene_list,
+  text_size = 15, alpha_degree = 0.2, border_thick = 2,
+  remove_grid = TRUE, use_venn = FALSE
+)
 }
