@@ -1,7 +1,7 @@
 Package: genekitr
 Type: Package
 Title: Gene Analysis Toolkit in R
-Version: 0.5.3
+Version: 0.6.1
 Authors@R: c(person("Yunze", "Liu", email = "jieandze1314@gmail.com", role = c("aut", "cre")))
 Maintainer: Yunze Liu <jieandze1314@gmail.com>
 URL: https://github.com/GangLiLab/genekitr
@@ -22,9 +22,9 @@ Suggests: BiocManager, cowplot, DOSE, data.table, easyPubMed, fgsea,
         futile.logger, ggplotify, ggsci, ggupset, ggrepel, magrittr,
         msigdbr, openxlsx, RColorBrewer, rappdirs, rentrez, scales,
         stats, utils, testthat (>= 3.0.0), knitr, rmarkdown
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 NeedsCompilation: no
-Packaged: 2022-01-06 01:24:06 UTC; reedliu1
+Packaged: 2022-04-22 03:51:42 UTC; reedliu1
 Author: Yunze Liu [aut, cre]
 Repository: CRAN
-Date/Publication: 2022-01-08 01:52:45 UTC
+Date/Publication: 2022-04-22 04:10:02 UTC

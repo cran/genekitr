@@ -1,4 +1,4 @@
-ad4995d6470f2b5f91504fee1dfb3238 *DESCRIPTION
+42f1fbeaa9ebc69b6d84a5d7bed03b44 *DESCRIPTION
 00175305e00e224945a05bd922a57bdd *NAMESPACE
 45b91c34470d8a277e2fc7585c63f799 *R/asEnrichdat.R
 bc4aeba4ffc1d8deee54b4f1bf9deeeb *R/data.R
@@ -10,10 +10,10 @@ a55316cd61e8d0ba327f31e801aa66c8 *R/genKEGG.R
 38079f1103bc48c59403751f75b1dc92 *R/genPubmed.R
 08db809f02710fa15d60c5ed2dd71be7 *R/ploTheme.R
 26b4e41096ba70f52b33a977278380c0 *R/plotEnrich.R
-932dd693ebd9d6f5b6f7f2270a8e512d *R/plotGSEA.R
+2a4e164bb64cfe48df69c830a882c803 *R/plotGSEA.R
 d56358696c67d0850d7f89bf2b0fb3ce *R/plotVenn.R
-8793d13c41d95030ddc6e75233e5ad3e *R/transID.R
-838917bb836f8a8fe17a076fe316d43b *R/utilities.R
+b313e23b49d6cb82e40144b3568b2f3a *R/transID.R
+3bd27eb21d86d141e8f470905b41ac18 *R/utilities.R
 a19720c84db9ed09f8a4c219322e0583 *README.md
 322ec406de9aae20aa222a0e2d8496ae *data/biocOrg_name.rda
 bd7753fed63431f391abd591122b4940 *data/ensOrg_name.rda
@@ -43,4 +43,4 @@ d68408735cc963aa8ea0213cd6eec133 *man/plotEnrich.Rd
 45a18e6661a2f732c3d1aa0c9d28e5c1 *man/plotGSEA.Rd
 ea4d164e9a5e112d809e2445362261de *man/plotVenn.Rd
 a7602d38de76599f4dd486d256ebbd1d *man/plot_theme.Rd
-28f7b2e9a79a46d5b3873ca89204b9d2 *man/transId.Rd
+b2fddcc9f853469aa41e2f9edecef02d *man/transId.Rd
