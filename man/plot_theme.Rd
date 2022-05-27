@@ -5,35 +5,36 @@
 \title{Themes for all plots}
 \usage{
 plot_theme(
-  theme_type = c("bw", "classic"),
   main_text_size = 8,
   legend_text_size = 6,
   font_type = "sans",
   border_thick = 1.5,
   remove_grid = TRUE,
   remove_border = FALSE,
-  remove_text = FALSE,
+  remove_main_text = FALSE,
+  remove_legend_text = FALSE,
   remove_legend = FALSE
 )
 }
 \arguments{
-\item{theme_type}{ggplot theme,}
-
 \item{main_text_size}{Numeric, main text size}
 
 \item{legend_text_size}{Numeric, legend text size}
 
 \item{font_type}{Character, specify the plot text font family, default is "sans".}
 
-\item{border_thick}{Numeric, border thickness, default is 1.}
+\item{border_thick}{Numeric, border thickness, default is 1.
+If set 0, remove both border and ticks.}
 
 \item{remove_grid}{Logical, remove background grid lines, default is FALSE.}
 
 \item{remove_border}{Logical, remove border line, default is FALSE.}
 
-\item{remove_text}{Logical, remove all text, default is FALSE.}
+\item{remove_main_text}{Logical, remove all axis text, default is FALSE.}
 
-\item{remove_legend}{Logical, remove legend, default is FALSE.}
+\item{remove_legend_text}{Logical, remove all legend text, default is FALSE.}
+
+\item{remove_legend}{Logical, remove entire legend, default is FALSE.}
 }
 \value{
 ggplot theme
@@ -44,5 +45,5 @@ Change ggplot text, font, legend and border
 \examples{
 library(ggplot2)
 ggplot(mtcars, aes(x=wt, y=mpg))+ geom_point()+
-  plot_theme(theme_type = 'bw', font_type = 'Times', border_thick = 2)
+  plot_theme(font_type = 'Times', border_thick = 2)
 }

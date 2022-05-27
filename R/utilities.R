@@ -108,55 +108,56 @@ mapEnsOrg <- function(organism) {
     org = ensorg %>% dplyr::filter(eval(parse(text = colnames(.)[check_all])) %in% organism) %>%
       dplyr::pull(latin_short_name)
   }else{
-    stop("\nCheck the latin_short_name in `ensOrg_name_data()`")
+    stop("\nCheck the latin_short_name in `genekitr::ensOrg_name`")
   }
 
   return(org)
 }
 
 #---  decide gene id type ---#
-gentype <- function(id, org) {
+gentype <- function(id, data = NULL, org) {
   org <- mapEnsOrg(org)
-  all <- ensAnno(org)
-  if('symbol' %in% colnames(all)){
-    all_symbol <- all$symbol %>% stringi::stri_remove_empty_na()
-    n_sym = sum(id %in% all_symbol)
+  if(is.null(data)) data <- ensAnno(org)
+
+  if('symbol' %in% colnames(data)){
+    data_symbol <- data$symbol %>% stringi::stri_remove_empty_na()
+    n_sym = sum(id %in% data_symbol)
   }else{
     n_sym = 0L
   }
 
-  if('ensembl' %in% colnames(all)){
-    all_ensembl <- stringr::str_split(all$ensembl,'; ') %>% unlist() %>% stringi::stri_remove_empty_na()
-    n_ens = sum(id %in% all_ensembl)
+  if('ensembl' %in% colnames(data)){
+    data_ensembl <- stringr::str_split(data$ensembl,'; ') %>% unlist() %>% stringi::stri_remove_empty_na()
+    n_ens = sum(id %in% data_ensembl)
   }else{
     n_ens = 0L
   }
 
-  if('entrezid' %in% colnames(all)){
-    all_entrezid <- all$entrezid %>% stringi::stri_remove_empty_na()
-    n_ent = sum(id %in% all_entrezid)
+  if('entrezid' %in% colnames(data)){
+    data_entrezid <- data$entrezid %>% stringi::stri_remove_empty_na()
+    n_ent = sum(id %in% data_entrezid)
   }else{
     n_ent = 0L
   }
 
-  if('uniprot' %in% colnames(all)){
-    all_uniprot <- stringr::str_split(all$uniprot,'; ') %>% unlist()%>% stringi::stri_remove_empty_na()
-    n_uni = sum(id %in% all_uniprot)
+  if('uniprot' %in% colnames(data)){
+    data_uniprot <- stringr::str_split(data$uniprot,'; ') %>% unlist()%>% stringi::stri_remove_empty_na()
+    n_uni = sum(id %in% data_uniprot)
   }else{
     n_uni = 0L
   }
 
-  if('ncbi_alias' %in% colnames(all) ){
-    all_alias <- c(all$ncbi_alias, all$ensembl_alias) %>%
+  if('ncbi_alias' %in% colnames(data) ){
+    data_alias <- c(data$ncbi_alias, data$ensembl_alias) %>%
       strsplit("; ") %>%
       unlist() %>%
       stringi::stri_remove_empty_na()
-    n_ala = sum(id %in% all_alias)
+    n_ala = sum(id %in% data_alias)
   }else{
     n_ala = 0L
   }
 
-  rm(list = paste0(org, "_anno"), envir = .GlobalEnv)
+  # rm(list = paste0(org, "_anno"), envir = .GlobalEnv)
 
   if(sum(n_sym,n_ens,n_ent,n_uni,n_ala) == 0){
     stop("Wrong organism or input id has no match!")
@@ -213,11 +214,13 @@ ensOrg_name_data <- function(){
 }
 
 #--- ensembl anno data ---#
-ensAnno <- function(org, version = 106) {
-  # if(is.null(version)) version = 106
+ensAnno <- function(org, version) {
+  if(missing(version)) version = 106
   org <- mapEnsOrg(tolower(org))
   # data_dir = rappdirs::user_data_dir(appname = 'genekitr')
   data_dir = tools::R_user_dir('genekitr',which = 'data')
+  data_dir = paste0(data_dir,'/v',version)
+  destfile = paste0(data_dir, "/", org, "_anno.fst")
 
   if(!dir.exists(data_dir)){
     tryCatch(
@@ -233,13 +236,57 @@ ensAnno <- function(org, version = 106) {
     )
   }
 
-  if (!file.exists(paste0(data_dir, "/", org, "_anno.rda"))) {
-    url = paste0("http://112.74.191.19/genekitr/v",version,'/', org, "_anno.rda")
-    web_download(url, paste0(data_dir, "/", org, "_anno.rda"),  mode = "wb", quiet = TRUE)
+  if (!file.exists(destfile)) {
+    message('We need to download some data, please wait (just once)...')
+    url = paste0("http://112.74.191.19/genekitr/v",version,'/', org, "_anno.fst")
+    # web_download(url, paste0(data_dir, "/", org, "_anno.fst"),  mode = "wb", quiet = TRUE)
+
+    tryCatch(
+      {
+        utils::download.file(url, destfile, quiet = TRUE, mode = 'wb')
+      },
+      error = function(e) {
+        message(paste0('Auto download failed...\nPlease download via: ',url,
+                       '\nThen save to: ',data_dir))
+      }
+    )
   }
 
-  load(paste0(data_dir, "/", org, "_anno.rda"), envir = .GlobalEnv)
-  get(paste0(org, "_anno"), envir = .GlobalEnv)
+  dat = suppressMessages(fst::read.fst(destfile))
+  invisible(dat)
+
+#   load(paste0(data_dir, "/", org, "_anno.rda"), envir = .GlobalEnv)
+#   get(paste0(org, "_anno"), envir = .GlobalEnv)
+}
+
+#--- keytype order data ---#
+getOrder <- function(org,keytype,version){
+  if(missing(version)) version = 106
+
+  org <- mapEnsOrg(tolower(org))
+  data_dir = tools::R_user_dir('genekitr',which = 'data')
+  data_dir = paste0(data_dir,'/v',version)
+  destfile = paste0(data_dir, "/", org,'_',keytype,'_order.fst')
+
+  if (!file.exists(destfile)) {
+    url = paste0("http://112.74.191.19/genekitr/v",version,'/', org,'_',keytype,'_order.fst')
+    # web_download(url, paste0(data_dir, "/", org,'_',keytype,'_order.fst'),  mode = "wb", quiet = TRUE)
+    tryCatch(
+      {
+        utils::download.file(url, destfile, quiet = TRUE, mode = 'wb')
+      },
+      error = function(e) {
+       message(paste0('Auto download failed...\nPlease download via: ',url,
+                      '\nThen save to: ',data_dir))
+      }
+    )
+
+  }
+
+  dat = suppressMessages(fst::read.fst(destfile))
+  invisible(dat)
+  # load(paste0(data_dir, "/",org,'_',keytype,'_order.rda'), envir = .GlobalEnv)
+  # get(paste0(org,'_',keytype, "_order"), envir = .GlobalEnv)
 }
 
 web_download <- function(url, destfile, try_time = 2L, ...) {
@@ -249,21 +296,31 @@ web_download <- function(url, destfile, try_time = 2L, ...) {
       if (abs(try_time - 3L) > 1) {
         message(abs(try_time - 3L),' attempt ...')
       }
-      utils::download.file(url, destfile, ...)
+
+      utils::download.file(url, destfile, quiet = TRUE,...)
+
     },
     error = function(e) {
       if (try_time == 0) {
         message("Failed after 2 attempts, please check internet connection!")
         invisible(NULL)
       } else {
-        web_download(url, destfile, try_time = try_time - 1L, ...)
+        web_download(url, destfile, try_time = try_time - 1L, quiet = TRUE,...)
       }
     }
   )
 }
 
+
 #--- add global variables ---#
 utils::globalVariables(c(
   ".", "data_dir","biocOrg_name","full_name","short_name","keggOrg_name","item","type","sets",
   "count","theme_classic","input_id","ensOrg_name","latin_short_name","ES","pathway",
-  "plotGseaTable","pval","scale_fill_continuous","scale_x_discrete", "ONTOLOGY","facet_grid"))
+  "plotGseaTable","pval","scale_fill_continuous","scale_x_discrete", "ONTOLOGY","facet_grid",
+  "BgRatio", "E", "ID", "V", "delete.edges", "enrichGenes", "geneID.y",
+  "geneID_symbol", "geom_edge_link", "geom_node_text", "ggraph", "graph.data.frame",
+  "guide_legend", "guides", "logfc", "melt", "new_ego", "scale_size_continuous","E<-", "V<-",
+  "method","Term", "arrow", "circle", "geom_node_label", "geom_node_point", "go_id", "gotbl", "parent",
+  "FoldEnrich", "GeneRatio", "fct_reorder", "geom_col", "scale_fill_discrete",
+  "scale_size", "scale_x_continuous", "sec_axis","everything", "gene","coord_flip",
+  "expansion", "index", "nes.group", "padj.group", "change","label", "logFC","stat","pvalue"))

@@ -1,13 +1,13 @@
-#' Adjust dataframe for enrichment plot
+#' Modify dataframe for enrichment plot
 #'
-#' make sure colname contains Description, Count, FoldEnrich/GeneRatio, pvalue/qvalue/p.adjust
+#' To make sure colname contains Description, Count, FoldEnrich/GeneRatio, pvalue/qvalue/p.adjust
 #'
-#' @param enrich_df dataframe of enrichment analysis result .
+#' @param enrich_df Enrichment analysis `data.frame` result.
 #'
 #' @importFrom stringr str_remove_all str_split str_remove
 #' @importFrom dplyr mutate pull
 #' @importFrom rlang .data
-#' @return A `data.frame`.
+#' @return  `data.frame`
 #' @export
 
 as.enrichdat <- function(enrich_df) {
@@ -40,9 +40,9 @@ as.enrichdat <- function(enrich_df) {
         lapply(., length) %>%
         unlist()
       enrich_df <- enrich_df %>% dplyr::mutate(Count = gen_num)
-    } else if (any(grepl("\\([1-9]{,4}\\)", colnames(enrich_df)))) {
-      gen_num <- enrich_df[grepl("\\([1-9]{,4}\\)", colnames(enrich_df))] %>%
-        dplyr::pull(1) %>%
+    } else if (any(grepl("\\([0-9]{,4}\\)", colnames(enrich_df)))) {
+      gen_num <- enrich_df[grepl("\\([0-9]{,4}\\)", colnames(enrich_df))] %>%
+        dplyr::pull(2) %>%
         as.numeric()
       enrich_df <- enrich_df %>% dplyr::mutate(Count = gen_num)
     } else {
@@ -83,19 +83,19 @@ as.enrichdat <- function(enrich_df) {
     if (any(grepl("setsize", to_check))) {
       colnames(enrich_df)[grepl("setsize", to_check)] <- "setSize"
       enrich_df <- enrich_df %>% dplyr::mutate(GeneRatio = as.numeric(Count) / as.numeric(setSize))
-    } else if (any(grepl("\\([1-9]{,4}\\)", colnames(enrich_df)))) {
+    } else if (any(grepl("\\([0-9]{,4}\\)", colnames(enrich_df)))) {
       # panther result
-      setsize <- colnames(enrich_df)[grepl("\\([1-9]{,4}\\)", colnames(enrich_df))] %>%
+      setsize <- colnames(enrich_df)[grepl("\\([0-9]{,4}\\)", colnames(enrich_df))] %>%
         stringr::str_remove(., ".*\\(") %>%
         stringr::str_remove(., "\\)") %>%
-        as.numeric()
+        as.numeric() %>%
+        min()
       enrich_df <- enrich_df %>% dplyr::mutate(GeneRatio = as.numeric(Count) / setsize)
     } else if (apply(enrich_df, 2, function(x) length(unique(x)) == 1)) {
       setsize <- enrich_df[1, apply(enrich_df, 2, function(x) length(unique(x)) == 1)] %>%
         stringr::str_remove("0") %>%
         as.numeric() %>%
-        sort() %>%
-        .[1]
+        min()
       enrich_df <- enrich_df %>% dplyr::mutate(GeneRatio = as.numeric(Count) / setsize)
     }
   }

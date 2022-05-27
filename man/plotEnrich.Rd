@@ -2,63 +2,128 @@
 % Please edit documentation in R/plotEnrich.R
 \name{plotEnrich}
 \alias{plotEnrich}
-\title{Dotplot for GO and KEGG enrichment analysis}
+\title{Plot for GO and KEGG enrichment analysis}
 \usage{
 plotEnrich(
   enrich_df,
-  plot_type = c("bar", "dot"),
-  xlab_type = c("FoldEnrich", "GeneRatio", "Count"),
-  legend_type = c("p.adjust", "pvalue", "qvalue"),
-  low_color = "red",
-  high_color = "blue",
-  show_item = 10,
+  fold_change = NULL,
+  plot_type = c("bar", "wego", "dot", "bubble", "lollipop", "geneheat", "genechord",
+    "network", "gomap", "goheat", "gotangram", "wordcloud", "upset"),
+  term_metric = c("FoldEnrich", "GeneRatio", "Count", "RichFactor"),
+  stats_metric = c("p.adjust", "pvalue", "qvalue"),
+  sim_method = c("JC", "Resnik", "Lin", "Rel", "Jiang", "Wang"),
+  up_color = "red",
+  down_color = "blue",
+  show_gene = "all",
   xlim_left = 0,
   xlim_right = NA,
   wrap_length = NULL,
+  scale_ratio = 1,
+  org = NULL,
+  ont = NULL,
+  layout,
   ...
 )
 }
 \arguments{
-\item{enrich_df}{`data.frame` of enrichment analysis result.}
+\item{enrich_df}{Enrichment analysis `data.frame` result.}
 
-\item{plot_type}{One of "bar" and "dot"}
+\item{fold_change}{Fold change or logFC values with gene IDs as names. Used in "heat" and "chord"
+plot.}
 
-\item{xlab_type}{X-axis label type, one of 'GeneRatio','Count','FoldEnrich'.}
+\item{plot_type}{Choose from "bar", "wego","bubble","dot", "lollipop","geneheat", "genechord",
+"network","gomap","goheat","gotangram","wordcloud","upset".}
 
-\item{legend_type}{Stats legend type, one of "pvalue", "p.adjust", "qvalue".}
+\item{term_metric}{Pathway term metric from one of 'GeneRatio','Count','FoldEnrich' and
+'RichFactor'.}
 
-\item{low_color}{Legend color for low pvalue or qvalue, default is "red".}
+\item{stats_metric}{Statistic metric from one of "pvalue", "p.adjust", "qvalue".}
 
-\item{high_color}{Legend color for high pvalue or qvalue, default is "blue".}
+\item{sim_method}{Method of calculating the similarity between nodes, one of one of "Resnik",
+"Lin", "Rel", "Jiang" , "Wang" and "JC" (Jaccard similarity coefficient) methods.
+Used in "map","goheat","gotangram","wordcloud".}
 
-\item{show_item}{Numeric, select top N rows to show, default is 10.}
+\item{up_color}{Color of stronger statistics (e.g. Pvalue 0.01) or higher logFC, default is "red".}
+
+\item{down_color}{Color of weaker statistics (e.g. Pvalue 1) or lower logFC, default is
+"blue".}
+
+\item{show_gene}{Select genes to show. Default is "all". Used in "heat" and "chord" plot.}
 
 \item{xlim_left}{X-axis left limit, default is 0.}
 
 \item{xlim_right}{X-axis right limit, default is NA.}
 
-\item{wrap_length}{Numeric, wrap text if longer than this length, default is NULL.}
+\item{wrap_length}{Numeric, wrap text if longer than this length. Default is NULL.}
 
-\item{...}{other arguments transfer to `plot_theme` function}
+\item{scale_ratio}{Numeric, scale of node and line size. Default is 1. Used in "network" and
+"gomap".}
+
+\item{org}{Organism name from `biocOrg_name`.}
+
+\item{ont}{One of "BP", "MF", and "CC".}
+
+\item{layout}{Grapgh layout in "map" plot, e,g, "circle", "dh", "drl", "fr","graphopt", "grid",
+"lgl", "kk", "mds", "nicely" (default),"randomly", "star".}
+
+\item{...}{other arguments from `plot_theme` function}
 }
 \value{
 A ggplot object
 }
 \description{
-Dotplot for GO and KEGG enrichment analysis
+Plot for GO and KEGG enrichment analysis
 }
 \examples{
 \dontrun{
+## example data
 library(ggplot2)
+library(igraph)
+library(ggraph)
 data(geneList, package = "genekitr")
-id <- names(geneList)[1:100]
+id <- names(geneList)[abs(geneList) > 1.5]
+logfc <- geneList[id]
+
 ego <- genGO(id,
-  org = "human", ont = "bp", pvalueCutoff = 0.05,
-  qvalueCutoff = 0.05, use_symbol = TRUE
-)
+  org = "human", ont = "bp", pvalueCutoff = 0.01,
+  qvalueCutoff = 0.01)
+ego <- ego[1:10,]
+all_ego <- genGO(id,
+  org = "human", ont = "all", pvalueCutoff = 0.01,
+  qvalueCutoff = 0.01)
+
+## example plots
 plotEnrich(ego,plot_type = "dot")
 
+plotEnrich(ego,plot_type = "bubble",scale_ratio = 0.4)
+
 plotEnrich(ego,plot_type = "bar")
+
+plotEnrich(all_ego,plot_type = 'wego')
+
+plotEnrich(ego,plot_type = "lollipop",
+down_color = "#325CAC", up_color = "#E69056",
+wrap_length = 25, scale_ratio = 0.4)
+
+plotEnrich(ego,plot_type = "geneheat")
+
+show_gene = c('BRCA2','CDK1','JUN','MCM8','TIPIN')
+plotEnrich(ego,plot_type = "geneheat",show_gene = show_gene)
+plotEnrich(ego,fold_change = logfc, plot_type = "geneheat",show_gene = show_gene)
+
+plotEnrich(ego,fold_change = logfc,plot_type = "genechord",show_gene = show_gene)
+
+plotEnrich(ego,plot_type = "network", scale_ratio = 0.5)
+
+plotEnrich(ego,plot_type = "gomap", wrap_length = 25)
+
+plotEnrich(ego,plot_type = "goheat",sim_method = 'Rel')
+
+plotEnrich(ego,plot_type = "gotangram",sim_method = 'Rel')
+
+plotEnrich(ego,plot_type = "wordcloud",sim_method = 'Rel')
+
+plotEnrich(ego,plot_type = "upset")
 }
 
 }

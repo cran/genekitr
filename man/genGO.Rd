@@ -9,7 +9,6 @@ genGO(
   group_list = NULL,
   org,
   ont,
-  use_symbol = TRUE,
   pAdjustMethod = "BH",
   pvalueCutoff = 0.05,
   qvalueCutoff = 0.1,
@@ -20,16 +19,13 @@ genGO(
 )
 }
 \arguments{
-\item{id}{A vector of gene id which can be entrez, ensembl or symbol.}
+\item{id}{A vector of gene id which can be entrezid, ensembl or symbol.}
 
 \item{group_list}{A list of gene id groups, default is NULL.}
 
 \item{org}{Organism name from `biocOrg_name`.}
 
-\item{ont}{One of "bp", "mf", and "cc" subontologies, or "all" for all
-three.}
-
-\item{use_symbol}{Logical to set result gene id as gene symbol, default is TRUE.}
+\item{ont}{One of "bp", "mf", and "cc" subontologies, or "all" for all three.}
 
 \item{pAdjustMethod}{One of "holm", "hochberg", "hommel", "bonferroni", "BH",
 "BY", "fdr", "none".}
@@ -58,12 +54,10 @@ Gene GO enrichment analysis
 data(geneList, package = "genekitr")
 
 # only gene ids
-id <- names(geneList)[1:100]
+id <- names(geneList)[abs(geneList) > 2]
 ego <- genGO(id,
-  org = "human", ont = "cc", pvalueCutoff = 0.01,
-  qvalueCutoff = 0.1, use_symbol = FALSE
-)
-head(ego)
+  org = "human", ont = "bp", pvalueCutoff = 0.01,
+  qvalueCutoff = 0.01)
 
 # gene id with groups
 id <- c(head(names(geneList),50),tail(names(geneList),50))
@@ -72,8 +66,7 @@ group <- list(group1  = c(rep('up',50),rep('down',50)),
 
 gego <- genGO(id, group_list = group,
   org = "human", ont = "bp", pvalueCutoff = 0.1,
-  qvalueCutoff = 1, use_symbol = FALSE
-)
+  qvalueCutoff = 1)
 
 }
 }

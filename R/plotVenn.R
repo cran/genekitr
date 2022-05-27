@@ -13,7 +13,7 @@
 #' @param ... other arguments transfer to `plot_theme` function
 #' @return  A ggplot object
 #' @importFrom VennDiagram venn.diagram
-#' @importFrom dplyr as_tibble filter select group_by summarize %>%
+#' @importFrom dplyr as_tibble filter select group_by summarize
 #' @importFrom tidyr gather
 #' @importFrom ggplot2 ggplot geom_bar aes geom_text after_stat theme
 #'   element_blank scale_y_continuous
@@ -33,12 +33,10 @@
 #' )
 #' plotVenn(sm_gene_list,
 #'   text_size = 1.5, alpha_degree = 1,
-#'   remove_grid = TRUE, color = ggsci::pal_lancet()(3)
-#' )
+#'   remove_grid = TRUE, color = ggsci::pal_lancet()(3))
 #' plotVenn(la_gene_list,
 #'   text_size = 15, alpha_degree = 0.2, border_thick = 2,
-#'   remove_grid = TRUE, use_venn = FALSE
-#' )
+#'   remove_grid = TRUE, use_venn = FALSE)
 plotVenn <- function(venn_list,
                      use_venn = TRUE,
                      color = NULL,
@@ -54,9 +52,10 @@ plotVenn <- function(venn_list,
   # use_venn <- ifelse(length(venn_list) <= 4, TRUE, FALSE)
 
   if (!requireNamespace("futile.logger", quietly = TRUE)) {
-    stop("Package futile.logger needed for this function to work. Please install it.",
+    warning("Package futile.logger needed for this function to work. Installing...",
          call. = FALSE
     )
+    utils::install.packages('futile.logger')
   }
 
   #--- codes ---#
@@ -120,7 +119,6 @@ plotVenn <- function(venn_list,
                  remove_grid = remove_grid,
                  border_thick = border_thick,
                  ...)
-
   }
 
   return(p)
