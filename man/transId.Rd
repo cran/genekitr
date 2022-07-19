@@ -19,7 +19,7 @@ transId(id, transTo, org = "hs", unique = FALSE, keepNA = FALSE)
 \item{keepNA}{If some id has no match at all, keep it or not. Default is FALSE.}
 }
 \value{
-A two-column data frame, first is input id and second is transformed id.
+data frame, first column is input id and others are converted id.
 }
 \description{
 Transform gene id among symbol, entrezid,  ensembl and uniprot.
@@ -35,11 +35,11 @@ transId(
 ## example2: input id with one-to-many mapping and fake one
 transId(
   id = c("MMD2", "HBD", "RNR1", "TEC", "BCC7", "FAKEID", "TP53"),
-  transTo = c("entrez","ensembl"), keepNA = TRUE
+  transTo = c("entrez", "ensembl"), keepNA = TRUE
 )
 
 # example3: auto-recognize ensembl version number
-transId('ENSG00000141510.11','symbol')
+transId("ENSG00000141510.11", "symbol")
 }
 
 }

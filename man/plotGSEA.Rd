@@ -8,9 +8,10 @@ plotGSEA(
   gsea_list,
   plot_type = c("volcano", "classic", "fgsea", "ridge", "bar"),
   stats_metric = c("p.adjust", "pvalue", "qvalue"),
-  show_pathway = 3,
+  show_pathway = NULL,
   show_gene = NULL,
-  colors = NULL,
+  colour = NULL,
+  wrap_length = NULL,
   ...
 )
 }
@@ -21,12 +22,14 @@ plotGSEA(
 
 \item{stats_metric}{Statistic metric from one of "pvalue", "p.adjust", "qvalue".}
 
-\item{show_pathway}{Select plotting pathways by specifying number (will choose top N pathways)
-or pathway name.}
+\item{show_pathway}{Select plotting pathways by number (will choose top N pathways)
+or pathway name (choose from ID column).}
 
 \item{show_gene}{Select genes to show. Default is "all". Used in "classic" plot.}
 
-\item{colors}{Color vector. Deafault is NULL.}
+\item{colour}{Colour vector. Deafault is NULL. Used in volcano, ridge and bar plot.}
+
+\item{wrap_length}{Numeric, wrap text if longer than this length. Default is NULL.}
 
 \item{...}{other arguments transfer to `plot_theme` function}
 }
@@ -41,30 +44,34 @@ GSEA plot
 library(ggplot2)
 ## get GSEA result
 data(geneList, package = "genekitr")
-gse <- genGSEA(genelist = geneList, org = "human",
-               category = "H",use_symbol = TRUE, pvalueCutoff = 0.05)
+gs <- geneset::getMsigdb(org = "human",category = "H")
+gse <- genGSEA(genelist = geneList, geneset = gs)
+
 ## volcano plot
 # get top3 of up and down pathways
-plotGSEA(gse, plot_type = 'volcano', show_pathway = 3)
+plotGSEA(gse, plot_type = "volcano", show_pathway = 3)
 # choose pathway by character
-pathways = c("HALLMARK_P53_PATHWAY","HALLMARK_GLYCOLYSIS","HALLMARK_DNA_REPAIR")
-plotGSEA(gse, plot_type = 'volcano',show_pathway = pathways)
+pathways <- c('HALLMARK_KRAS_SIGNALING_UP','HALLMARK_P53_PATHWAY','HALLMARK_GLYCOLYSIS')
+plotGSEA(gse, plot_type = "volcano", show_pathway = pathways)
 
 ## classic pathway plot
-genes = c("MET", "TP53", "PMM2")
-plotGSEA(gse, plot_type = 'classic', show_pathway = pathways, show_gene = genes)
+genes <- c('ENG','TP53','MET')
+plotGSEA(gse, plot_type = "classic", show_pathway = pathways, show_gene = genes)
 
-## fgsea for multiple pathway
-plotGSEA(gse, plot_type = 'fgsea', show_pathway = 3)
+## fgsea table plot
+plotGSEA(gse, plot_type = "fgsea", show_pathway = 3)
 
 ## ridgeplot
-plotGSEA(gse, plot_type = 'ridge',
-  show_pathway = 10, stats_metric = 'p.adjust')
+plotGSEA(gse,
+  plot_type = "ridge",
+  show_pathway = 10, stats_metric = "p.adjust"
+)
 
 ## two-side barplot
-plotGSEA(gse, plot_type = 'bar',main_text_size = 8,
-colors = c('navyblue','orange'))
-
+plotGSEA(gse,
+  plot_type = "bar", main_text_size = 8,
+  colour = c("navyblue", "orange")
+)
 }
 
 }

@@ -4,7 +4,7 @@
 \alias{genInfo}
 \title{Get gene related information}
 \usage{
-genInfo(id = NULL, org = "hs", unique = FALSE)
+genInfo(id = NULL, org = "hs", unique = FALSE, keepNA = TRUE)
 }
 \arguments{
 \item{id}{Gene id (symbol, ensembl or entrez id) or uniprot id. If this argument is NULL, return all gene info.}
@@ -12,6 +12,8 @@ genInfo(id = NULL, org = "hs", unique = FALSE)
 \item{org}{Latin organism shortname from `ensOrg_name`. Default is human.}
 
 \item{unique}{Logical, if one-to-many mapping occurs, only keep one record with fewest NA. Default is FALSE.}
+
+\item{keepNA}{If some id has no match at all, keep it or not. Default is TRUE.}
 }
 \value{
 A `data.frame`.
@@ -22,12 +24,15 @@ Get gene related information
 \examples{
 \donttest{
 # example1: input list with fake id and one-to-many mapping id
-x = genInfo(id = c(
+x <- genInfo(id = c(
   "MCM10", "CDC20", "S100A9", "MMP1", "BCC7",
-  "FAKEID", "TP53", "HBD", "NUDT10"))
+  "FAKEID", "TP53", "HBD", "NUDT10"
+))
 
 # example2: statistics of human gene biotypes
-genInfo(org = 'hs') \%>\% {table(.$gene_biotype)}
-
+genInfo(org = "hs") \%>\%
+  {
+    table(.$gene_biotype)
+  }
 }
 }

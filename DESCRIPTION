@@ -1,7 +1,7 @@
 Package: genekitr
 Type: Package
 Title: Gene Analysis Toolkit in R
-Version: 0.8.5
+Version: 1.0.3
 Authors@R: 
     c(person(given = "Yunze",
              family = "Liu",
@@ -9,7 +9,7 @@ Authors@R:
              email = "jieandze1314@gmail.com",
              comment = c(ORCID = "0000-0002-7414-8556")))
 Maintainer: Yunze Liu <jieandze1314@gmail.com>
-URL: https://github.com/GangLiLab/genekitr
+URL: https://www.genekitr.fun/
 BugReports: https://github.com/GangLiLab/genekitr/issues
 Description: An analysis toolkit focused on genes. It mainly includes five
     features (search, convert, analysis, plot, and export).
@@ -21,18 +21,19 @@ Description: An analysis toolkit focused on genes. It mainly includes five
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 4.0)
-Imports: clusterProfiler, dplyr, europepmc, fst, ggplot2, ggraph,
-        igraph, magrittr, openxlsx, stringr, stringi, tidyr,
-        VennDiagram, rlang
-Suggests: AnnotationDbi, BiocManager, cowplot, DOSE, data.table,
-        easyPubMed, forcats, fgsea, futile.logger, ggplotify, ggsci,
+Depends: R (>= 3.6)
+Imports: clusterProfiler, dplyr, DOSE, europepmc, fst, geneset,
+        ggplot2, ggraph, igraph, magrittr, openxlsx, stringr, stringi,
+        tidyr, VennDiagram, rlang
+Suggests: AnnotationDbi, BiocManager, cowplot, ComplexUpset,
+        data.table, forcats, fgsea, futile.logger, ggplotify, ggsci,
         ggupset, ggrepel, ggridges, ggnewscale, GOplot, GOSemSim,
-        msigdbr, RColorBrewer, rappdirs, rentrez, reshape2, rio, rrvgo,
-        scales, stats, testthat (>= 3.0.0), tibble, knitr, rmarkdown
+        labeling, msigdbr, pheatmap, tm, treemap, RColorBrewer,
+        rappdirs, RCurl, reshape2, rio, rrvgo, scales, stats, testthat
+        (>= 3.0.0), tibble, wordcloud, knitr, rmarkdown
 RoxygenNote: 7.2.0
 NeedsCompilation: no
-Packaged: 2022-05-27 01:19:23 UTC; reedliu1
+Packaged: 2022-07-19 02:25:37 UTC; reedliu1
 Author: Yunze Liu [aut, cre] (<https://orcid.org/0000-0002-7414-8556>)
 Repository: CRAN
-Date/Publication: 2022-05-27 10:00:08 UTC
+Date/Publication: 2022-07-19 02:40:02 UTC

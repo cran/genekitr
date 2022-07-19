@@ -4,12 +4,14 @@
 \alias{getPubmed}
 \title{Get pubmed paper records by searching abstract}
 \usage{
-getPubmed(term, keys)
+getPubmed(term, add_term = NULL, num = 100)
 }
 \arguments{
-\item{term}{query terms e.g. gene id, GO/KEGG term or id}
+\item{term}{query terms e.g. gene id, GO/KEGG pathway}
 
-\item{keys}{other searching keys}
+\item{add_term}{other searching terms Default is NULL}
+
+\item{num}{limit the number of records . Default is 100.}
 }
 \value{
 A list of `tibble` for pubmed records
@@ -19,11 +21,11 @@ Get pubmed paper records by searching abstract
 }
 \examples{
 \donttest{
-term <- c("Tp53","Brca1","Tet2")
-keys <- c('stem cell','mouse')
-l <- getPubmed(term,keys)
+term <- c("Tp53", "Brca1", "Tet2")
+add_term <- c("stem cell", "mouse")
+l <- getPubmed(term, add_term, num = 30)
 # very easy to output
-expoSheet(l,name_list = term, filename = 'test.xlsx',dir = tempdir())
+expoSheet(l, data_name = term, filename = "test.xlsx", dir = tempdir())
 }
 
 }
