@@ -1,4 +1,9 @@
-#' Advanced Plot for GO and KEGG enrichment analysis
+#' Advanced Plot for  gene enrichment analysis of ORA method
+#'
+#' Over-representation analysis (ORA) is a simple method for objectively deciding whether a set of variables of
+#' known or suspected biological relevance, such as a gene set or pathway, is more prevalent in a set of variables
+#' of interest than we expect by chance.
+#'
 #' Both up and down regulated pathways could be plotted in one figure as two-side barplot
 #' @param up_enrich_df Enrichment analysis `data.frame` for up-regulated genes.
 #' @param down_enrich_df Enrichment analysis `data.frame` for down-regulated genes.
@@ -36,6 +41,8 @@ plotEnrichAdv <- function(up_enrich_df,
       is.data.frame(up_enrich_df) | is.data.frame(down_enrich_df)
   )
   plot_type <- match.arg(plot_type)
+  if(any(grepl("nes",colnames(up_enrich_df),ignore.case = T))) term_metric <- "Count"
+  if(any(grepl("nes",colnames(down_enrich_df),ignore.case = T))) term_metric <- "Count"
 
   #--- codes ---#
   tryCatch(

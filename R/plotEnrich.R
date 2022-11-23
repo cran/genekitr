@@ -1,4 +1,8 @@
-#' Plot for GO and KEGG enrichment analysis
+#' Plot for gene enrichment analysis of ORA method
+#'
+#' Over-representation analysis (ORA) is a simple method for objectively deciding whether a set of variables of
+#' known or suspected biological relevance, such as a gene set or pathway, is more prevalent in a set of variables
+#' of interest than we expect by chance.
 #'
 #' @param enrich_df Enrichment analysis `data.frame` result.
 #' @param fold_change Fold change or logFC values with gene IDs as names. Used in "heat" and "chord"
@@ -43,7 +47,7 @@
 #' @return A ggplot object
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' ## example data
 #' library(ggplot2)
 #' library(igraph)
@@ -55,10 +59,6 @@
 #' gs <- geneset::getGO(org = "human",ont = "bp")
 #' ego <- genORA(id, geneset = gs)
 #' ego <- ego[1:10, ]
-#' all_ego <- genGO(id,
-#'   org = "human", ont = "all", pvalueCutoff = 0.01,
-#'   qvalueCutoff = 0.01
-#' )
 #'
 #' ## example plots
 #' plotEnrich(ego, plot_type = "dot")
@@ -66,8 +66,6 @@
 #' plotEnrich(ego, plot_type = "bubble", scale_ratio = 0.4)
 #'
 #' plotEnrich(ego, plot_type = "bar")
-#'
-#' plotEnrich(all_ego, plot_type = "wego")
 #'
 #' plotEnrich(ego,
 #'   plot_type = "lollipop",
@@ -132,6 +130,8 @@ plotEnrich <- function(enrich_df,
   if(all_go){
     colnames(enrich_df)[tolower(colnames(enrich_df))%in%'ontology'] = 'ONTOLOGY'
   }
+
+  if(any(grepl("nes",colnames(enrich_df),ignore.case = T))) term_metric <- "Count"
 
   # if (all_go & !plot_type %in% c("bar", "wego")) {
   #   warning(paste0(
@@ -419,16 +419,16 @@ plotEnrich <- function(enrich_df,
 
     # if show_gene is not symbol, first extract matching symbol
     if(all(show_gene == 'all')) stop('Please specify gene name to "show_gene"...')
-    if (all(show_gene %in% id)) {
+    if (length(show_gene %in% id) > length(show_gene %in% id_symbol)) {
       show_gene <- id_df %>%
         dplyr::filter(geneID %in% show_gene) %>%
         dplyr::pull(geneID_symbol)
-    }
-    if (all(show_gene %in% id_symbol)) {
+    }else{
       show_gene <- id_df %>%
         dplyr::filter(geneID_symbol %in% show_gene) %>%
         dplyr::pull(geneID_symbol)
     }
+
 
     plot_df <- enrich_df %>%
       dplyr::select(Description, geneID_symbol) %>%
@@ -631,6 +631,8 @@ plotEnrich <- function(enrich_df,
   if (plot_type == "wego") {
     if (!"ontology" %in% tolower(colnames(enrich_df))) {
       stop("WEGO plot needs a column named 'ontology' which infers ontology type of 'bp', 'cc' or 'mf'...")
+    }else{
+      colnames(enrich_df)[grep("ontology", colnames(enrich_df), ignore.case = T)] <- "Ontology"
     }
 
     if(missing(n_term)) n_term = 5
@@ -638,24 +640,24 @@ plotEnrich <- function(enrich_df,
     if (!"main_text_size" %in% names(lst)) lst$main_text_size <- 8
 
     wego <- enrich_df %>%
-      dplyr::select(1,'Description', "Count", "GeneRatio", "ONTOLOGY") %>%
+      dplyr::select(1,'Description', "Count", "GeneRatio", "Ontology") %>%
       dplyr::mutate(GeneRatio = GeneRatio * 100) %>%
-      dplyr::group_by(ONTOLOGY) %>%
+      dplyr::group_by(Ontology) %>%
       dplyr::top_n(n_term, GeneRatio) %>%
       dplyr::ungroup() %>%
-      dplyr::arrange(ONTOLOGY, GeneRatio) %>%
+      dplyr::arrange(Ontology, GeneRatio) %>%
       dplyr::mutate(Position = dplyr::n():1) %>%
-      dplyr::mutate(ONTOLOGY = dplyr::case_when(
-        tolower(ONTOLOGY) == "bp" ~ "Biological Process",
-        tolower(ONTOLOGY) == "cc" ~ "Cellular Component",
-        tolower(ONTOLOGY) == "mf" ~ "Molecular Function"
+      dplyr::mutate(Ontology = dplyr::case_when(
+        tolower(Ontology) == "bp" ~ "Biological Process",
+        tolower(Ontology) == "cc" ~ "Cellular Component",
+        tolower(Ontology) == "mf" ~ "Molecular Function"
       ))
 
     normalizer <- max(wego$Count) / max(wego$GeneRatio)
 
     p <- ggplot(data = wego, aes(
       x = forcats::fct_reorder(Description, sort(Position)),
-      y = GeneRatio, fill = ONTOLOGY
+      y = GeneRatio, fill = Ontology
     )) +
       ggsci::scale_fill_nejm() +
       geom_col(data = wego, aes(
@@ -672,7 +674,7 @@ plotEnrich <- function(enrich_df,
       scale_x_discrete(labels = text_wraper(wrap_length)) +
       xlab(NULL) +
       ylab("Gene Ratio(%)") +
-      facet_grid(. ~ ONTOLOGY, scales = "free") +
+      facet_grid(. ~ Ontology, scales = "free") +
       theme(
         axis.text.x = element_text(angle = 70, hjust = 1),
         strip.text.x = element_text(size = lst$main_text_size)
@@ -708,7 +710,7 @@ plotEnrich <- function(enrich_df,
     uanc <- uanc[!uanc %in% anc1]
 
     # get plot edge and nodes data
-    utils::data("gotbl", package = "GOSemSim")
+    gotbl <- get_gosim_data()
     edge <- gotbl[gotbl$go_id %in% unique(c(id, uanc)), ] %>%
       dplyr::select(c(5, 1, 4))
     node <- gotbl %>%
@@ -719,7 +721,7 @@ plotEnrich <- function(enrich_df,
         color = enrich_df[go_id, stats_metric],
         size = sapply(enrichGenes[go_id], length)
       )
-    rm(gotbl, envir = .GlobalEnv)
+    rm(gotbl, envir = .genekitrEnv)
 
     # only show top nodes/id-related parent and child nodes
     show_node_top <- table(edge$parent) %>%
@@ -1022,3 +1024,10 @@ loadOrgdb <- function(orgdb) {
   }
   eval(parse(text = paste0(orgdb, "::", orgdb)))
 }
+
+get_gosim_data <- function(){
+  .initial()
+  utils::data("gotbl", package = "GOSemSim",envir = .genekitrEnv)
+  gotbl <- get("gotbl", envir = .genekitrEnv)
+}
+

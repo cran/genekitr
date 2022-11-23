@@ -381,8 +381,6 @@ gentype <- function(id, data = NULL, org) {
     n_ala <- 0L
   }
 
-  # rm(list = paste0(org, "_anno"), envir = .GlobalEnv)
-
   if (sum(n_sym, n_ens, n_ent, n_uni, n_ala) == 0) {
     stop("Wrong organism or input id has no match!")
   } else {
@@ -458,5 +456,6 @@ utils::globalVariables(c(
   "FoldEnrich", "GeneRatio", "fct_reorder", "geom_col", "scale_fill_discrete",
   "scale_size", "scale_x_continuous", "sec_axis", "everything", "gene", "coord_flip",
   "expansion", "index", "nes.group", "padj.group", "change", "label", "logFC", "stat", "pvalue",
-  "cluster","Cluster", "go", "Bioc_anno", "Platform", "ensembl", "ensembl_id", "probe_id", "hsapiens_probe_platform", "new_x","old_id","entrezid","bioc_name",".genekitrEnv"
+  "cluster","Cluster", "go", "Bioc_anno", "Platform", "ensembl", "ensembl_id", "probe_id",
+  "hsapiens_probe_platform", "new_x","old_id","entrezid","bioc_name",".genekitrEnv","Ontology"
 ))

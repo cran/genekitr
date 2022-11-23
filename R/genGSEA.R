@@ -1,6 +1,6 @@
-#' Gene Set Enrichment Analysis (FCS method)
+#' Gene Set Enrichment Analysis
 #'
-#' @param genelist Order ranked genelist in decreasing order, gene can be
+#' @param genelist Pre-ranked genelist with decreasing order, gene can be
 #'   entrez, ensembl or symbol.
 #' @param geneset Gene set is a two-column data.frame with term id and gene id.
 #' Please use package `geneset` to select available gene set or make new one.
@@ -26,7 +26,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # only gene ids
 #' data(geneList, package = "genekitr")
 #' gs <- geneset::getGO(org = "human",ont = "mf")
