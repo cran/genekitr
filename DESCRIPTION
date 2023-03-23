@@ -1,7 +1,7 @@
 Package: genekitr
 Type: Package
 Title: Gene Analysis Toolkit
-Version: 1.1.3
+Version: 1.1.5
 Authors@R: 
     c(person(given = "Yunze",
              family = "Liu",
@@ -34,7 +34,7 @@ Suggests: AnnotationDbi, BiocManager, cowplot, ComplexUpset,
         rmarkdown, XML, xml2, httr
 RoxygenNote: 7.2.2
 NeedsCompilation: no
-Packaged: 2023-03-01 02:02:51 UTC; reedliu1
+Packaged: 2023-03-23 00:35:13 UTC; reedliu1
 Author: Yunze Liu [aut, cre] (<https://orcid.org/0000-0002-7414-8556>)
 Repository: CRAN
-Date/Publication: 2023-03-01 09:00:02 UTC
+Date/Publication: 2023-03-23 12:22:08 UTC
