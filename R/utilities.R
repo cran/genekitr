@@ -178,8 +178,13 @@ web.url <- "https://genekitr-china.oss-accelerate.aliyuncs.com"
 
 #--- ensembl anno data ---#
 # options(geneset.download.method = "wininet")
-ensAnno <- function(org, download.method = NULL) {
-  org <- mapEnsOrg(tolower(org))
+ensAnno <- function(org, download.method = NULL, hgVersion) {
+  if(hgVersion == 'v38'){
+    org <- mapEnsOrg(tolower(org))
+  }else{
+    org <- mapEnsOrg(tolower(org))
+    org <- paste0(org,'_v19')
+  }
 
   data_dir <- tools::R_user_dir("genekitr", which = "data")
   sub_dir <- "/info/gene/"
@@ -187,13 +192,13 @@ ensAnno <- function(org, download.method = NULL) {
   make_dir(data_dir)
 
   url <- paste0(web.url, sub_dir, org, "_anno.fst")
-  destfile <- paste0(data_dir, "/", org, "_anno.fst")
+  destfile <- paste0(data_dir, org, "_anno.fst")
   web_f_size <- check_web_size(url)
   local_f_size <- file.size(destfile)
   if(is.na(local_f_size)) local_f_size = 0
 
   genekitr_download(url, destfile, method = download.method,
-                   data_dir, web_f_size, local_f_size)
+                    data_dir, web_f_size, local_f_size)
 
   dat <- suppressMessages(fst::read.fst(destfile))
   invisible(dat)
@@ -226,8 +231,14 @@ probAnno <- function(org, download.method = NULL) {
 }
 
 #--- keytype order data ---#
-getOrder <- function(org, keytype, download.method = NULL) {
-  org <- mapEnsOrg(tolower(org))
+getOrder <- function(org, keytype, download.method = NULL, hgVersion) {
+  if(hgVersion == 'v38'){
+    org <- mapEnsOrg(tolower(org))
+  }else{
+    org <- mapEnsOrg(tolower(org))
+    org <- paste0(org,'_v19')
+  }
+
 
   data_dir <- tools::R_user_dir("genekitr", which = "data")
   sub_dir <- "/info/gene/"
@@ -335,17 +346,41 @@ genekitr_download <- function(url, destfile,data_dir,
 }
 
 #---  decide gene id type ---#
-gentype <- function(id, data = NULL, org) {
+gentype <- function(id, data = NULL, org, hgVersion='v38') {
   org <- mapEnsOrg(org)
-  if (is.null(data)) data <- ensAnno(org)
+  if (is.null(data)) data <- ensAnno(org,hgVersion = hgVersion)
 
   if ("symbol" %in% colnames(data)) {
     data_symbol_normal <- data$symbol %>% stringi::stri_remove_empty_na()
     data_symbol_lower <- tolower(data_symbol_normal)
     data_symbol_upper <- toupper(data_symbol_normal)
-    n_sym <- sum(id %in% data_symbol_normal | id %in% data_symbol_lower | id %in% data_symbol_upper)
+    n_sym <- sum(id %in% data_symbol_normal |  tolower(id) %in% data_symbol_lower | toupper(id) %in% data_symbol_upper)
   } else {
     n_sym <- 0L
+  }
+
+  if ("ncbi_alias" %in% colnames(data)) {
+    data_ncbi_alias_normal <- data$ncbi_alias %>%
+      stringr::str_split("; ") %>%
+      unlist() %>%
+      stringi::stri_remove_empty_na()
+    data_ncbi_alias_lower <- tolower(data_ncbi_alias_normal)
+    data_ncbi_alias_upper <- toupper(data_ncbi_alias_normal)
+    n_ala <- sum(id %in% data_ncbi_alias_normal | tolower(id) %in% data_ncbi_alias_lower | toupper(id) %in% data_ncbi_alias_upper)
+  } else {
+    n_ala <- 0L
+  }
+
+  if ("ensembl_alias" %in% colnames(data)) {
+    data_ensembl_alias_normal <- data$ensembl_alias %>%
+      stringr::str_split("; ") %>%
+      unlist() %>%
+      stringi::stri_remove_empty_na()
+    data_ensembl_alias_lower <- tolower(data_ensembl_alias_normal)
+    data_ensembl_alias_upper <- toupper(data_ensembl_alias_normal)
+    n_e_ala <- sum(id %in% data_ensembl_alias_normal | tolower(id) %in% data_ensembl_alias_lower | toupper(id) %in% data_ensembl_alias_upper)
+  } else {
+    n_e_ala <- 0L
   }
 
   if ("ensembl" %in% colnames(data)) {
@@ -373,21 +408,12 @@ gentype <- function(id, data = NULL, org) {
     n_uni <- 0L
   }
 
-  if ("ncbi_alias" %in% colnames(data)) {
-    data_alias <- c(data$ncbi_alias, data$ensembl_alias) %>%
-      strsplit("; ") %>%
-      unlist() %>%
-      stringi::stri_remove_empty_na()
-    n_ala <- sum(id %in% data_alias)
-  } else {
-    n_ala <- 0L
-  }
-
-  if (sum(n_sym, n_ens, n_ent, n_uni, n_ala) == 0) {
+  if (sum(n_sym, n_ens, n_ent, n_uni, n_ala, n_e_ala) == 0) {
     stop("Wrong organism or input id has no match!")
   } else {
-    check <- which(c(n_sym, n_ens, n_ent, n_uni, n_ala) %in% max(n_sym, n_ens, n_ent, n_uni, n_ala))
-    typ <- c("SYMBOL", "ENSEMBL", "ENTREZID", "UNIPROT", "SYMBOL")[check] %>% unique()
+    check <- which(c(n_sym, n_ens, n_ent, n_uni, n_ala, n_e_ala) %in%
+                     max(n_sym, n_ens, n_ent, n_uni, n_ala, n_e_ala))
+    typ <- c("SYMBOL", "ENSEMBL", "ENTREZID", "UNIPROT", "SYMBOL","SYMBOL")[check] %>% unique()
   }
 
   return(typ)
@@ -459,5 +485,6 @@ utils::globalVariables(c(
   "scale_size", "scale_x_continuous", "sec_axis", "everything", "gene", "coord_flip",
   "expansion", "index", "nes.group", "padj.group", "change", "label", "logFC", "stat", "pvalue",
   "cluster","Cluster", "go", "Bioc_anno", "Platform", "ensembl", "ensembl_id", "probe_id",
-  "hsapiens_probe_platform", "new_x","old_id","entrezid","bioc_name",".genekitrEnv","Ontology"
+  "hsapiens_probe_platform", "new_x","old_id","entrezid","bioc_name",".genekitrEnv","Ontology","venn_percent",
+  "input_id2"
 ))

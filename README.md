@@ -1,6 +1,6 @@
 <img src="https://jieandze1314-1255603621.cos.ap-guangzhou.myqcloud.com/blog/2022-05-24-043213.png" align="left" width="200"/>
 
-[![CRANstatus](https://www.r-pkg.org/badges/version/genekitr)](https://cran.r-project.org/package=genekitr) [![](https://img.shields.io/badge/devel%20version-1.1.5-green.svg)](https://github.com/GangLiLab/genekitr) [![](https://cranlogs.r-pkg.org/badges/grand-total/genekitr?color=orange)](https://cran.r-project.org/package=genekitr) [![lifecycle](https://img.shields.io/badge/lifecycle-stable-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html) 
+[![CRANstatus](https://www.r-pkg.org/badges/version/genekitr)](https://cran.r-project.org/package=genekitr) [![](https://img.shields.io/badge/devel%20version-1.1.9-green.svg)](https://github.com/GangLiLab/genekitr) [![](https://cranlogs.r-pkg.org/badges/grand-total/genekitr?color=orange)](https://cran.r-project.org/package=genekitr) [![lifecycle](https://img.shields.io/badge/lifecycle-stable-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html) 
 
 ![Alt](https://repobeats.axiom.co/api/embed/e42ba06d30de893670c70324f19398ef0a7c26fa.svg "Repobeats analytics image")
 
@@ -129,7 +129,21 @@ Doodle has finished differential expression analysis and GO/KEGG enrichment anal
 
 ## 🔖 Citation
 
-Wait to update...
+> For now, the paper is peer-reviewed. 
+> If you like it, you could choose to cite the cran package "genekitr" as below.
+
+Yunze Liu (2023). genekitr: Gene Analysis Toolkit. R package version 1.1.5. https://cran.r-project.org/web/packages/genekitr/index.html
+
+> A BibTeX entry for LaTeX users is:
+
+```latex
+@Manual{,
+title = {genekitr: Gene Analysis Toolkit},
+author = {Yunze Liu},
+note = {R package version 1.1.5},
+url = {https://cran.r-project.org/web/packages/genekitr/index.html/},
+}
+```
 
 
 

@@ -4,7 +4,14 @@
 \alias{transId}
 \title{Transform id among symbol, entrezid,  ensembl and uniprot.}
 \usage{
-transId(id, transTo, org = "hs", unique = FALSE, keepNA = FALSE)
+transId(
+  id,
+  transTo,
+  org = "hs",
+  unique = FALSE,
+  keepNA = FALSE,
+  hgVersion = "v38"
+)
 }
 \arguments{
 \item{id}{Gene ids or protein ids.}
@@ -17,6 +24,8 @@ transId(id, transTo, org = "hs", unique = FALSE, keepNA = FALSE)
 \item{unique}{Logical, if one-to-many mapping occurs, only keep one record with fewest NA. Default is FALSE.}
 
 \item{keepNA}{If some id has no match at all, keep it or not. Default is FALSE.}
+
+\item{hgVersion}{Select human genome build version from "v38" (default) and "v19".}
 }
 \value{
 data frame, first column is input id and others are converted id.
@@ -40,6 +49,9 @@ transId(
 
 # example3: auto-recognize ensembl version number
 transId("ENSG00000141510.11", "symbol")
+
+# example4: search genes with case-insensitive
+transId(c('nc886','ezh2','TP53'),transTo = "ensembl",org = 'hs',unique = TRUE)
 }
 
 }
