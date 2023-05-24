@@ -1,7 +1,7 @@
 Package: genekitr
 Type: Package
 Title: Gene Analysis Toolkit
-Version: 1.1.9
+Version: 1.2.2
 Authors@R: 
     c(person(given = "Yunze",
              family = "Liu",
@@ -23,8 +23,8 @@ Encoding: UTF-8
 LazyData: true
 Depends: R (>= 3.6)
 Imports: clusterProfiler, dplyr, europepmc, fst, geneset, ggplot2,
-        ggraph, igraph, magrittr, openxlsx, stringr, stringi, tidyr,
-        VennDiagram, rlang
+        ggraph, ggvenn, igraph, magrittr, openxlsx, stringr, stringi,
+        tidyr, rlang
 Suggests: AnnotationDbi, BiocManager, cowplot, ComplexUpset,
         data.table, fuzzyjoin, forcats, fgsea, futile.logger,
         ggplotify, ggsci, ggupset, ggrepel, ggridges, ggnewscale,
@@ -34,7 +34,7 @@ Suggests: AnnotationDbi, BiocManager, cowplot, ComplexUpset,
         rmarkdown, XML, xml2, httr
 RoxygenNote: 7.2.2
 NeedsCompilation: no
-Packaged: 2023-04-15 07:17:39 UTC; reedliu1
+Packaged: 2023-05-24 02:06:46 UTC; reedliu1
 Author: Yunze Liu [aut, cre] (<https://orcid.org/0000-0002-7414-8556>)
 Repository: CRAN
-Date/Publication: 2023-04-15 07:50:02 UTC
+Date/Publication: 2023-05-24 04:00:02 UTC
