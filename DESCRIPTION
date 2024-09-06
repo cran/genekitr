@@ -1,13 +1,12 @@
 Package: genekitr
 Type: Package
 Title: Gene Analysis Toolkit
-Version: 1.2.7
+Version: 1.2.8
 Authors@R: 
     c(person(given = "Yunze",
              family = "Liu",
              role = c("aut", "cre"),
-             email = "jieandze1314@gmail.com",
-             comment = c(ORCID = "0000-0002-7414-8556")))
+             email = "jieandze1314@gmail.com"))
 Maintainer: Yunze Liu <jieandze1314@gmail.com>
 URL: https://www.genekitr.fun/
 BugReports: https://github.com/GangLiLab/genekitr/issues
@@ -24,9 +23,9 @@ Suggests: AnnotationDbi, cowplot, ComplexUpset, forcats, fgsea,
         GOplot, GOSemSim, labeling, pheatmap, tm, treemap,
         RColorBrewer, RCurl, reshape2, rio, rrvgo, testthat (>= 3.0.0),
         wordcloud, knitr, rmarkdown, XML, xml2, httr
-RoxygenNote: 7.2.2
+RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2024-06-04 10:37:45 UTC; reedliu1
-Author: Yunze Liu [aut, cre] (<https://orcid.org/0000-0002-7414-8556>)
+Packaged: 2024-09-06 06:57:28 UTC; reedliu1
+Author: Yunze Liu [aut, cre]
 Repository: CRAN
-Date/Publication: 2024-06-06 22:40:02 UTC
+Date/Publication: 2024-09-06 13:00:06 UTC
