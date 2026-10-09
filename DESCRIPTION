@@ -1,7 +1,7 @@
 Package: genekitr
 Type: Package
 Title: Gene Analysis Toolkit
-Version: 1.2.8
+Version: 1.3.0
 Authors@R: 
     c(person(given = "Yunze",
              family = "Liu",
@@ -14,18 +14,17 @@ Description: Provides features for searching, converting, analyzing, plotting, a
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 3.6)
-Imports: clusterProfiler, dplyr, europepmc, fst, geneset, ggplot2,
-        ggraph, ggvenn, igraph, magrittr, openxlsx, stringr, stringi,
-        tidyr, rlang
+Depends: R (>= 4.0.0)
+Imports: clusterProfiler, dplyr (>= 1.1.0), europepmc, fst, geneset,
+        ggplot2 (>= 3.5.0), ggraph, ggvenn, igraph, magrittr, openxlsx,
+        stringr, stringi, tidyr, rlang
 Suggests: AnnotationDbi, cowplot, ComplexUpset, forcats, fgsea,
-        futile.logger, ggplotify, ggsci, ggrepel, ggridges, ggnewscale,
-        GOplot, GOSemSim, labeling, pheatmap, tm, treemap,
-        RColorBrewer, RCurl, reshape2, rio, rrvgo, testthat (>= 3.0.0),
-        wordcloud, knitr, rmarkdown, XML, xml2, httr
-RoxygenNote: 7.3.2
+        ggplotify, ggsci, ggrepel, ggridges, ggnewscale, GOplot,
+        GOSemSim, labeling, pheatmap, tm, treemap, RColorBrewer,
+        reshape2, rio, rrvgo, wordcloud
+Config/roxygen2/version: 8.1.0
 NeedsCompilation: no
-Packaged: 2024-09-06 06:57:28 UTC; reedliu1
+Packaged: 2026-10-09 05:03:45 UTC; reedliu1
 Author: Yunze Liu [aut, cre]
 Repository: CRAN
-Date/Publication: 2024-09-06 13:00:06 UTC
+Date/Publication: 2026-10-09 05:30:02 UTC

@@ -14,11 +14,11 @@
 #' please modify the "Description" column and set the argument as "description". Default is by 'id'.
 #' @param ... other arguments transfer to `plot_theme` function
 #'
-#' @importFrom ggplot2 ggplot aes aes_ geom_point xlab ylab scale_color_manual geom_hline expansion
-#' element_blank element_rect margin geom_linerange scale_y_continuous geom_segment geom_bar
-#' scale_fill_manual geom_hline element_line geom_line scale_colour_manual guide_colourbar
+#' @importFrom ggplot2 ggplot aes geom_point xlab ylab scale_color_manual geom_hline expansion
+#'   element_blank element_rect margin geom_linerange scale_y_continuous geom_segment geom_bar
+#'   scale_fill_manual geom_hline element_line geom_line scale_colour_manual guide_colourbar
 #' @importFrom dplyr filter arrange slice_head select rename group_by summarise case_when mutate
-#' pull all_of
+#'   pull all_of
 #'
 #' @return A ggplot object
 #' @export
@@ -93,7 +93,7 @@ plotGSEA <- function(gsea_list,
   }
 
   if(!'geneID_symbol' %in% colnames(gsea_df)){
-    gsea_df <- gsea_df %>% dplyr::mutate(geneID_symbol = geneID)
+    gsea_df <- gsea_df %>% dplyr::mutate(geneID_symbol = core_enriched_geneID)
   }
 
 
@@ -126,7 +126,7 @@ plotGSEA <- function(gsea_list,
     }
 
     if(label_by == 'id'){
-      p <- ggplot(plot_df, aes(x = NES, y = -log10(eval(parse(text = stats_metric))), color = group)) +
+      p <- ggplot(plot_df, aes(x = NES, y = -log10(.data[[stats_metric]]), color = group)) +
         geom_point(alpha = 0.6, size = 3.5) +
         xlab("NES") +
         ylab(paste0("-log10(", stats_metric_label, ")")) +
@@ -138,7 +138,7 @@ plotGSEA <- function(gsea_list,
           show.legend = F
         )
     }else{
-      p <- ggplot(plot_df, aes(x = NES, y = -log10(eval(parse(text = stats_metric))), color = group)) +
+      p <- ggplot(plot_df, aes(x = NES, y = -log10(.data[[stats_metric]]), color = group)) +
         geom_point(alpha = 0.6, size = 3.5) +
         xlab("NES") +
         ylab(paste0("-log10(", stats_metric_label, ")")) +
@@ -203,9 +203,9 @@ plotGSEA <- function(gsea_list,
     names(description_color) <- colour[seq_along(description_color)]
 
 
-    p1 <- ggplot(plot_df, aes_(x = ~x)) +
+    p1 <- ggplot(plot_df, aes(x = .data$x)) +
       xlab(NULL) +
-      geom_line(aes_(y = ~runningScore, color = ~Description), linewidth = 1) +
+      geom_line(aes(y = .data$runningScore, color = .data$Description), linewidth = 1) +
       scale_color_manual(values = names(description_color)) +
       geom_hline(yintercept = 0, lty = "longdash", lwd = 0.2) +
       ylab("Enrichment\n Score") +
@@ -230,7 +230,7 @@ plotGSEA <- function(gsea_list,
       i <- i + 1
     }
 
-    # p2 <- ggplot(plot_df, aes_(x = ~x)) +
+    # p2 <- ggplot(plot_df, aes(x = .data$x)) +
     #   geom_linerange(aes_(ymin=~ymin, ymax=~ymax, color=~Description)) +
     #   xlab(NULL) + ylab(NULL) +
     #   scale_color_manual(values = names(description_color))+
@@ -244,8 +244,8 @@ plotGSEA <- function(gsea_list,
     #   annotate(geom = 'segment', y = Inf, yend = -Inf,  x = Inf, xend = Inf,
     #            size = lst$border_thick)
 
-    p2 <- ggplot(plot_df, aes_(x = ~x)) +
-      geom_linerange(aes_(ymin = ~ymin, ymax = ~ymax, color = ~Description)) +
+    p2 <- ggplot(plot_df, aes(x = .data$x)) +
+      geom_linerange(aes(ymin = .data$ymin, ymax = .data$ymax, color = .data$Description)) +
       xlab(NULL) +
       ylab(NULL) +
       scale_color_manual(values = colour) +
@@ -274,7 +274,7 @@ plotGSEA <- function(gsea_list,
     if (!"main_text_size" %in% names(lst)) lst$main_text_size <- 8
 
     p3 <- ggplot(plot_df) +
-      geom_segment(aes_(x = ~x, xend = ~x, y = ~y, yend = 0),
+      geom_segment(aes(x = .data$x, xend = .data$x, y = .data$y, yend = 0),
         color = "grey"
       ) +
       geom_bar(
@@ -369,28 +369,28 @@ plotGSEA <- function(gsea_list,
         dplyr::filter(ID %in% show_pathway) %>%
         dplyr::select(ID, dplyr::all_of(stats_metric), geneID_symbol) %>%
         tidyr::separate_rows(geneID_symbol, sep = "\\/") %>%
-        dplyr::rename(geneID = geneID_symbol)
+        dplyr::rename(core_enriched_geneID = geneID_symbol)
     }else{
       new_gsea_df <- gsea_df %>%
         dplyr::filter(ID %in% show_pathway) %>%
-        dplyr::select(ID, dplyr::all_of(stats_metric), geneID) %>%
-        tidyr::separate_rows(geneID, sep = "\\/")
+        dplyr::select(ID, dplyr::all_of(stats_metric), core_enriched_geneID) %>%
+        tidyr::separate_rows(core_enriched_geneID, sep = "\\/")
     }
 
 
     # if gsea has no entrezid, transID first
-    # if (!all(sapply(new_gsea_df$geneID, function(x) grepl("^[0-9].*[0-9]$", x, perl = T)))) {
-    #   id_map <- suppressMessages(transId(new_gsea_df$geneID, "entrezid", gsea_list$org))
+    # if (!all(sapply(new_gsea_df$core_enriched_geneID, function(x) grepl("^[0-9].*[0-9]$", x, perl = T)))) {
+    #   id_map <- suppressMessages(transId(new_gsea_df$core_enriched_geneID, "entrezid", gsea_list$org))
     #   new_gsea_df <- merge(new_gsea_df, id_map,
-    #     by.x = "geneID", by.y = "input_id",
+    #     by.x = "core_enriched_geneID", by.y = "input_id",
     #     all.x = T, all.y = F
-    #   ) %>% dplyr::select(-geneID) %>% dplyr::rename(geneID = entrezid)
+    #   ) %>% dplyr::select(-core_enriched_geneID) %>% dplyr::rename(core_enriched_geneID = entrezid)
     # }
 
     logfc <- gsea_list$genelist
 
-    plot_df <- merge(new_gsea_df, logfc, by.x = "geneID", by.y = "ID") %>%
-      dplyr::select(-geneID)
+    plot_df <- merge(new_gsea_df, logfc, by.x = "core_enriched_geneID", by.y = "ID") %>%
+      dplyr::select(-core_enriched_geneID)
 
     term_order <- plot_df %>%
       dplyr::group_by(ID) %>%
@@ -414,7 +414,7 @@ plotGSEA <- function(gsea_list,
     }
     up_color = colour[1]; down_color = colour[2]
 
-    p <- ggplot(plot_df, aes_string(x = "logfc", y = "ID", fill = stats_metric)) +
+    p <- ggplot(plot_df, aes(x = .data$logfc, y = .data$ID, fill = .data[[stats_metric]])) +
       ggridges::geom_density_ridges() +
       scale_fill_continuous(
         low = up_color, high = down_color, name = stats_metric,
@@ -482,50 +482,40 @@ plotGSEA <- function(gsea_list,
       )) +
       coord_flip()
 
+    # use fixed hjust instead of "inward"/"outward": the latter depends on where zero sits
+    # relative to the panel centre, so labels randomly ended up on top of the bars
     pos_new <- sum(gsea_df$NES>0); neg_nes <- sum(gsea_df$NES<0)
     if(neg_nes == 0 & pos_new != 0 ){
+      # only positive bars: labels inside the bars, starting from zero
       p <- p +
         geom_text(
           data = subset(gsea_df, NES > 0),
           aes(x = index, y = 0, label = paste0("  ", ID), color = padj.group),
-          size = lst$main_text_size / 3.6, hjust = "outward"
+          size = lst$main_text_size / 3.6, hjust = 0
         )
     }else if(neg_nes != 0 & pos_new == 0 ){
+      # only negative bars: labels inside the bars, ending at zero
       p <- p +
         geom_text(
           data = subset(gsea_df, NES < 0),
-          aes(x = index, y = 0, label = paste0("  ", ID), color = padj.group),
-          size = lst$main_text_size / 3.6, hjust = "inward"
+          aes(x = index, y = 0, label = paste0(ID, "  "), color = padj.group),
+          size = lst$main_text_size / 3.6, hjust = 1
         )
     }else{
-
-      if(pos_new<=neg_nes){
-        p <- p +
-          geom_text(
-            data = subset(gsea_df, NES > 0),
-            aes(x = index, y = 0, label = paste0(ID, "  "), color = padj.group),
-            size = lst$main_text_size / 3.6,
-            hjust = "inward"
-          ) +
-          geom_text(
-            data = subset(gsea_df, NES < 0),
-            aes(x = index, y = 0, label = paste0("  ", ID), color = padj.group),
-            size = lst$main_text_size / 3.6, hjust = "outward"
-          )
-      }else if (pos_new > neg_nes){
-        p <- p +
-          geom_text(
-            data = subset(gsea_df, NES > 0),
-            aes(x = index, y = 0, label = paste0(ID, "  "), color = padj.group),
-            size = lst$main_text_size / 3.6,
-            hjust = "inward"
-          ) +
-          geom_text(
-            data = subset(gsea_df, NES < 0),
-            aes(x = index, y = 0, label = paste0("  ", ID), color = padj.group),
-            size = lst$main_text_size / 3.6, hjust = "outward"
-          )
-      }
+      # two-side: zero is placed at the centre and labels sit on the opposite side of the bars
+      nes_lim <- max(abs(gsea_df$NES))
+      p <- p +
+        ggplot2::expand_limits(y = c(-nes_lim, nes_lim)) +
+        geom_text(
+          data = subset(gsea_df, NES > 0),
+          aes(x = index, y = 0, label = paste0(ID, "  "), color = padj.group),
+          size = lst$main_text_size / 3.6, hjust = 1
+        ) +
+        geom_text(
+          data = subset(gsea_df, NES < 0),
+          aes(x = index, y = 0, label = paste0("  ", ID), color = padj.group),
+          size = lst$main_text_size / 3.6, hjust = 0
+        )
     }
 
     p <- p +
@@ -589,4 +579,4 @@ calcScore <- function(geneset, genelist, item, exponent, fortify = TRUE, org) {
 }
 
 
-utils::globalVariables(c("NES", "qvalue", "group", "Description", "geom_line", "x", "y", "desc", "geneID", "geom_tile", "logfc2","Description.y"))
+utils::globalVariables(c("NES", "qvalue", "group", "Description", "geom_line", "x", "y", "desc", "core_enriched_geneID", "geom_tile", "logfc2","Description.y"))

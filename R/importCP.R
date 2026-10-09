@@ -139,7 +139,9 @@ importCP <- function(object,
     }
 
     ### save as list
-    egmt = egmt %>% dplyr::select(-GeneRatio)
+    # keep the same column names as genGSEA() result
+    egmt = egmt %>% dplyr::select(-GeneRatio) %>%
+      dplyr::rename(core_enriched_geneID = geneID, core_enriched_count = Count)
     genelist_df = data.frame(ID = names(genelist), logfc = genelist)
     exponent = data.frame(exponent = exponent)
     org = data.frame(org = ens_org)
@@ -219,5 +221,5 @@ importCP <- function(object,
 }
 
 utils::globalVariables(c(
-  "genelist", "geneset", "gs_name"
+  "genelist", "geneset", "gs_name","geneID"
 ))
